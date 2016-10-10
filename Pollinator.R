@@ -43,7 +43,7 @@ head(pollinator)
 # Calculate and plot mean nr of visits per site
 pol <- pollinator %>%
   filter(stage == "E") %>%
-  #filter(site == "07") %>%
+  filter(site == "07") %>%
   group_by(stage, date, site) %>%
   #summarise(n = n(), nrvisit = mean(fly)) %>%
   ggplot() +
