@@ -16,6 +16,11 @@ Temperature <- Temperature %>%
   mutate(minutes = (floor(minute(date)/10)*10)) %>%
   mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes)))
 
+# Mean Temperature
+Temperature %>% 
+  group_by(stage) %>% 
+  summarize(mean = mean(temperature))
+
 
 # POLLINATOR OBSERVATIONS
 setwd("C:/Users/Signe/Dropbox/Mismatch/Data")
