@@ -1,7 +1,5 @@
 ### LOAD POLLINATOR DATA
 
-# Hi Signe velkommen til Github
-
 #### LIBRARIES
 install.packages("tidyr"); install.packages("dplyr"); install.packages("lubridate"); install.packages("ggplot2")
 library("tidyr")
