@@ -40,12 +40,12 @@ head(pollinator)
 
 
 # Calculate and plot mean nr of visits per site
-pol <- pollinator %>%
+pollinator %>%
   filter(stage == "E") %>%
-  filter(site == "07") %>%
+  #filter(site == "07") %>%
   group_by(stage, date, site) %>%
   #summarise(n = n(), nrvisit = mean(fly)) %>%
   ggplot() +
-  geom_point(aes(x = date, y = fly, color = site)) +
+  geom_point(aes(x = vind, y = fly, color = site)) +
   facet_wrap(~site)
 
