@@ -46,7 +46,7 @@ pollinator %>%
   summarise(corel = cor((vind), fly))
 anova(mod01)#FRÅGA AUD 
 
-plot((pollinator$sol.og.sky), pollinator$fly)# det f?rsta ?r f?r x-axeln och det andra ?r f?r y. Lag for VVT. 
+plot((pollinator$vind), pollinator$fly)# det f?rsta ?r f?r x-axeln och det andra ?r f?r y. Lag for VVT. 
 #Boxplot 
 pollinator%>%filter(stage!="L")%>%
 
@@ -56,14 +56,24 @@ facet_wrap(~stage)
  
 
 #Boxplot 
-pollinator%>%filter(stage!="L")%>%
+pollinator%>%filter(stage!="L")%>%filter(vind!=3)%>%filter(!is.na(vind))%>%#try to use filter
   ggplot(aes(x=factor(vind) , y=fly))+
   geom_boxplot() +
   facet_wrap(~stage)
 
 # Temp
 pollinator%>%filter(stage!="L")%>%
-  mutate(stage = plyr::mapvalues(stage, c("E", "M"), c(...)))
+  mutate(stage = plyr::mapvalues(stage, c("E", "M"), c(Early, Mid)))
   ggplot(aes(x=temperature , y=fly))+
   geom_point() +
   facet_wrap(~stage)
+#add labels to axes
+plot(x,
+     y,
+     main="temperature vs flies",
+     xlab="celsius",
+     ylab="flies") 
+#make a regressionline for temperature
+ggplot(mpg, aes(x=temperature , y=fly)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
