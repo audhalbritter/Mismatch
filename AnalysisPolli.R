@@ -63,8 +63,11 @@ pollinator%>%filter(stage!="L")%>%filter(vind!=3)%>%filter(!is.na(vind))%>%#try 
 
 # Temp
 pollinator%>%filter(stage!="L")%>%
-  mutate(stage = plyr::mapvalues(stage, c("E", "M"), c(Early, Mid)))
-  ggplot(aes(x=temperature , y=fly))+
+  mutate(stage = plyr::mapvalues(stage, c("E", "M"), c("Early", "Mid"))) %>% 
+  ggplot(aes(x=temperature , y=fly)) +
+  geom_smooth(method=lm) +
+  xlab("Temperature in °C") +
+  ylab("Number of flies") +
   geom_point() +
   facet_wrap(~stage)
 #add labels to axes
