@@ -35,9 +35,12 @@ pollinator <- polli %>%
   mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%  # bestemme rekkefölgen for en faktor
   mutate(minutes = (floor(minute(date)/10)*10)) %>%
   mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>%
-  left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site"))
+  left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site")) %>% 
+  mutate(sol.og.sky = plyr::mapvalues(sol.og.sky, c("overskyet", "overskyet_littsol", "sol_littsky", "sol"), c("cloudy", "little sun", "little cloudy", "sun"))) %>% 
+  mutate(sol.og.sky = factor(sol.og.sky, c("cloudy", "little sun", "little cloudy", "sun")))
 head(pollinator)
 
+save(pollinator, file = "pollinator.Rdata")
 
 # Calculate and plot mean nr of visits per site
 pollinator %>%
