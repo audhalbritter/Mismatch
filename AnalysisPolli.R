@@ -5,15 +5,22 @@ newdat <- pollinator%>%
   filter(vind != 3)
 
 # Temperature: regression
-mod01 <- lm(log(fly+1) ~ sol.og.sky + stage, data = newdat)
+mod01 <- lm(log(fly+1) ~ temperature * stage, data = newdat)
 summary(mod01)
 anova(mod01)
-par(mfrow = c(1,1))
+par(mfrow = c(2,2))
 plot(mod01)
         
 # Vind, Weather, hour: anova
-mod01 <- lm(log(fly+1) ~ factor(hour) + stage, data = newdat)
+mod01 <- lm(log(fly+1) ~ sol.og.sky * stage, data = newdat)
+anova(mod01)
+
+#ANOVA för temperature och vind 
+mod01 <- lm(temperature~vind, data = newdat)
 summary(mod01)
+anova(mod01)
+par(mfrow = c(2,2))
+plot(mod01)
 
 str(pollinator)
 
@@ -43,31 +50,33 @@ head(pollinator)
 pollinator %>%
   group_by(stage)%>%
   filter(!is.na(vind))%>%
-  summarise(corel = cor((vind), fly))
+  summarise(corel = cor((sol.og.sky), fly))
 anova(mod01)#FRÅGA AUD 
 
 plot((pollinator$vind), pollinator$fly)# det f?rsta ?r f?r x-axeln och det andra ?r f?r y. Lag for VVT. 
 #Boxplot 
 pollinator%>%filter(stage!="L")%>%
 
-ggplot(aes(x=sol.og.sky , y=fly))+
-geom_boxplot() +
-facet_wrap(~stage)
+ggplot(pollinator, aes(x=sol.og.sky , y=fly))+
+geom_line(aes(group=factor(sol.og.sky))+#skriver om från geom_boxplot() till....
+ facet_wrap(~stage) 
  
 
 #Boxplot 
 pollinator%>%filter(stage!="L")%>%filter(vind!=3)%>%filter(!is.na(vind))%>%#try to use filter
-  ggplot(aes(x=factor(vind) , y=fly))+
+  ggplot(aes(x=factor(sol.og.sky) , y=fly))+
   geom_boxplot() +
-  facet_wrap(~stage)
+facet_wrap(~stage)+
+xlab("factor (weather)")+
+ylab("number of flies")
 
 # Temp
 pollinator%>%filter(stage!="L")%>%
-  mutate(stage = plyr::mapvalues(stage, c("E", "M"), c("Early", "Mid"))) %>% 
+  mutate(stage = plyr::mapvalues(stage, c("E","M"), c("Early", "Mid"))) %>% 
   ggplot(aes(x=temperature , y=fly)) +
   geom_smooth(method=lm) +
-  xlab("Temperature in °C") +
-  ylab("Number of flies") +
+  xlab("Temperature in °C")+
+  ylab("Number of flies")+
   geom_point() +
   facet_wrap(~stage)
 #add labels to axes
