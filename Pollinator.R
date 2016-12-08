@@ -1,11 +1,12 @@
 ### LOAD POLLINATOR DATA
 
 #### LIBRARIES
-install.packages("tidyr"); install.packages("dplyr"); install.packages("lubridate"); install.packages("ggplot2")
+#install.packages("tidyr"); install.packages("dplyr"); install.packages("lubridate"); install.packages("ggplot2")
 library("tidyr")
 library("dplyr")
 library("lubridate")
 library("ggplot2")
+
 ### LOAD TEMPERATURE DATA
 load("TemperatureiButton.RData", verbose = TRUE)
 Temperature <- Temperature %>%
@@ -36,11 +37,10 @@ pollinator <- polli %>%
   mutate(minutes = (floor(minute(date)/10)*10)) %>%
   mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>%
   left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site")) %>% 
-  mutate(sol.og.sky = plyr::mapvalues(sol.og.sky, c("overskyet", "overskyet_littsol", "sol_littsky", "sol"), c("cloudy", "little sun", "little cloudy", "sun"))) %>% 
-  mutate(sol.og.sky = factor(sol.og.sky, c("cloudy", "little sun", "little cloudy", "sun")))
-head(pollinator)
+  mutate(sol.og.sky = plyr::mapvalues(sol.og.sky, c("overskyet","overskyet_littsol","sol_littsky","sol"), c("overcast","cloudy","cloud_sun","sun"))) %>% 
+  mutate(sol.og.sky = factor(sol.og.sky, levels = c("overcast","cloudy","cloud_sun","sun")))
 
-save(pollinator, file = "pollinator.Rdata")
+
 
 # Calculate and plot mean nr of visits per site
 pollinator %>%
@@ -51,4 +51,7 @@ pollinator %>%
   ggplot() +
   geom_point(aes(x = vind, y = fly, color = site)) +
   facet_wrap(~site)
+
+
+load(file="pollinator.Rdata")
 

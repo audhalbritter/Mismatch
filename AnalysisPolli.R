@@ -16,7 +16,7 @@ mod01 <- lm(log(fly+1) ~ sol.og.sky * stage, data = newdat)
 anova(mod01)
 
 #ANOVA för temperature och vind 
-mod01 <- lm(temperature~vind, data = newdat)
+mod01 <- lm(log(temperature)~vind*stage, data = newdat)
 summary(mod01)
 anova(mod01)
 par(mfrow = c(2,2))
@@ -54,21 +54,25 @@ pollinator %>%
 anova(mod01)#FRÅGA AUD 
 
 plot((pollinator$vind), pollinator$fly)# det f?rsta ?r f?r x-axeln och det andra ?r f?r y. Lag for VVT. 
+
 #Boxplot 
 pollinator%>%filter(stage!="L")%>%
-
-ggplot(pollinator, aes(x=sol.og.sky , y=fly))+
-geom_line(aes(group=factor(sol.og.sky))+#skriver om från geom_boxplot() till....
- facet_wrap(~stage) 
+  mutate(stage = plyr::mapvalues(stage, c("E","M"), c("Early", "Mid"))) %>% 
+  ggplot(aes(x = sol.og.sky, y = fly)) +
+  geom_boxplot() + #skriver om från geom_boxplot() till....
+  facet_wrap(~stage) +
+  xlab("") +
+  ylab("number of flies")
  
 
 #Boxplot 
 pollinator%>%filter(stage!="L")%>%filter(vind!=3)%>%filter(!is.na(vind))%>%#try to use filter
-  ggplot(aes(x=factor(sol.og.sky) , y=fly))+
+  mutate(stage = plyr::mapvalues(stage, c("E","M"), c("Early", "Mid"))) %>% 
+  ggplot(aes(x=factor(vind) , y=fly)) +
   geom_boxplot() +
-facet_wrap(~stage)+
-xlab("factor (weather)")+
-ylab("number of flies")
+  facet_wrap(~stage) +
+  xlab("") +
+  ylab("number of flies")
 
 # Temp
 pollinator%>%filter(stage!="L")%>%
