@@ -1,92 +1,77 @@
 ##### PHENOLOGY ######
 
 #### LIBRARIES
-install.packages("tidyr")
 library("tidyr")
 library("dplyr")
 library("lubridate")
 library("ggplot2")
 
 #### READ IN DATA ####
-getwd()
-setwd("/Users/audhalbritter/Dropbox/mismatch/Data")
-
-# FLOWERS
-flower <- read.csv("RANfenologi.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
-flower <- as.data.frame(t(flower), stringsAsFactors = FALSE) # transpose data
-names(flower) <- flower[1,] # first column = name
-flower <- flower[-1,] # remove first column
-flower$date <- dmy_hm(paste(flower$Dato, flower$Tid))
-flower$Dato <- NULL
-flower$Tid <- NULL
-flower2 <- gather(flower, key = "plot", value = "flowering", -date, -Vaer, -Hvem)
-flower2$flowering <- as.numeric(flower2$flowering)
-flower2$stage <- substring(flower2$plot, 1,1)
-flower2$site <- substring(flower2$plot, 2,3)
-flower2$plot <- substring(flower2$plot, 4,4)
 
 
+# PHENOLOGY
+pheno <- read.csv("RANfenologi.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
+pheno <- as.data.frame(t(pheno), stringsAsFactors = FALSE) # transpose data
+names(pheno) <- pheno[1,] # first column = name
+pheno <- pheno[-1,] # remove first column
+pheno$date <- dmy_hm(paste(pheno$Dato, pheno$Tid))
+pheno$Dato <- NULL
+pheno$Tid <- NULL
+pheno2 <- gather(pheno, key = "plot", value = "flowering", -date, -Vaer, -Hvem) %>% 
+  mutate(flowering = as.numeric(flowering)) %>% 
+  mutate(stage = factor(substring(plot, 1,1))) %>% 
+  mutate(site = factor(substring(plot, 2,3))) %>% 
+  mutate(plot = factor(substring(plot, 4,4))) %>% 
+  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>% 
+  mutate(day = format(as.Date(date,format="%Y-%m-%d"))) %>%
+  filter(!is.na(flowering)) # remove NA
+
+
+# POLLINATOR OBSERVATIONS
+polli <- read.csv("RanunculusPollinator.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+pollinator <- polli %>%
+  filter(!Tid == "") %>% # slette alle koloner med Na
+  mutate(date = dmy_hm(paste(Dato, Tid))) %>%# lime sammen dato å tid
+  mutate(fly = as.numeric(Fluer)) %>%
+  mutate(stage = substring(Site, 1,1), site = substring(Site, 2,3)) %>%# lage to nye variabler, stage å site
+  select(-Tid, -Fluer, -Site, -Dato) %>% # sletter her koloner ikke rekker, - betyr ta vekk
+  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%  # bestemme rekkefölgen for en faktor
+  mutate(minutes = (floor(minute(date)/10)*10)) %>%
+  mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>% # making 10 minutes steps
+  left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site")) %>% 
+  mutate(sol.og.sky = plyr::mapvalues(sol.og.sky, c("overskyet","overskyet_littsol","sol_littsky","sol"), c("overcast","cloudy","cloud_sun","sun"))) %>% 
+  mutate(sol.og.sky = factor(sol.og.sky, levels = c("overcast","cloudy","cloud_sun","sun"))) %>% 
+  mutate(site = factor(site)) %>% 
+  mutate(day = format(as.Date(date,format="%Y-%m-%d"))) %>%
+  select(-minutes.x, -minutes.y)
 
 
 
-#### PLOT DATA ####
-setwd("/Users/audhalbritter/Dropbox/mismatch/Analysis/Mismatch")
 # Calculate and plot mean nr of flowers per site
-fl <- flower2 %>%
-  filter(!is.na(flowering)) %>%
-  #filter(stage == "M") %>%
-  group_by(stage, date) %>%
-  summarise(n = n(), nrflower = mean(flowering)) %>%
-  ggplot() + 
-  geom_line(aes(x = date, y = nrflower, color = site)) +
-  facet_wrap(~site)
+fl <- pheno2 %>%
+  group_by(stage, day, site) %>%
+  summarise(n = n(), nrflower = sum(flowering)) %>% 
+  select(-n)
 
+dat <- pollinator %>%
+  group_by(stage, day, site) %>%
+  summarise(n = n(), nrvisit = mean(fly)) %>%
+  select(-n) %>% 
+  left_join(fl, by = c("day" = "day", "stage" = "stage", "site" = "site"))
 
 
 # Plot flowering and visits together
-ggplot() +
-  geom_line(data = fl, aes(x = date, y = nrflower)) +
-  geom_point(data = pol, aes(x = date, y = nrvisit), shape = 17) +
-  facet_wrap(~stage) +
-  ylab("Nr of flowers / visits") +
-  ggtitle("Site") +
-  theme(legend.position="none")
 
+dat %>%
+  filter(stage == "E") %>% 
+  ggplot() +
+  geom_point(aes(x = day, y = nrflower), color = "red") +
+  geom_point(aes(x = day, y = nrvisit)) +
+  facet_wrap(~ site)
 
-
-
-
-### LOAD POLLINATOR DATA
-
-#### LIBRARIES
-install.packages("tidyr"); install.packages("dplyr"); install.packages("lubridate"); install.packages("ggplot2")
-library("tidyr")
-library("dplyr")
-library("lubridate")
-library("ggplot2")
-
-# POLLINATOR OBSERVATIONS
-setwd("/Users/audhalbritter/Dropbox/mismatch/Data")
-polli <- read.csv("RANpollinator.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
-names(polli) <- polli[1,] # first column = name
-polli <- polli[-1,] # remove first column
-polli2 <- rbind(polli[,1:6], polli[,7:12], polli[,13:18], polli[,19:24], polli[,25:30])
-polli2 <- polli2[!(polli2$Tid==""), ] # remove empty rows
-polli2$date <- dmy_hm(paste(polli2$Dato, polli2$Tid)) #  merge date and time
-polli2$insect <- as.numeric(polli2$Fluer) # make numeric
-polli2$stage <- substring(polli2$Site, 1,1) # split site into stage and site
-polli2$site <- substring(polli2$Site, 2,3)
-polli2$Dato <- NULL # remove
-polli2$Tid <- NULL
-polli2$Fluer <- NULL
-polli2$Site <- NULL
-
-# Calculate and plot mean nr of visits per site
-pol <- polli2 %>%
-  filter(stage == "E") %>%
-  #filter(site == "07") %>%
-  group_by(stage, date, site) %>%
-  summarise(n = n(), nrvisit = mean(insect)) %>%
-  ggplot() + 
-  geom_point(aes(x = date, y = nrvisit, color = site)) +
-  facet_wrap(~site)
+dat %>%
+  filter(stage == "M") %>% 
+  ggplot() +
+  geom_point(aes(x = day, y = nrflower), color = "red") +
+  geom_point(aes(x = day, y = nrvisit)) +
+  facet_wrap(~ site)
