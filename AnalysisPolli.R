@@ -61,7 +61,7 @@ pollinator%>%filter(stage!="L")%>%
   ggplot(aes(x = sol.og.sky, y = fly)) +
   geom_boxplot() + #skriver om från geom_boxplot() till....
   facet_wrap(~stage) +
-  xlab("") +
+  xlab("weather") +
   ylab("number of flies")
  
 
