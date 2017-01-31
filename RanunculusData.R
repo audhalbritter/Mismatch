@@ -62,6 +62,7 @@ dat <- pollinator %>%
 
 # Plot flowering and visits together
 
+# Early
 dat %>%
   filter(stage == "E") %>% 
   ggplot() +
@@ -69,9 +70,28 @@ dat %>%
   geom_point(aes(x = day, y = nrvisit)) +
   facet_wrap(~ site)
 
+# Mid
 dat %>%
   filter(stage == "M") %>% 
   ggplot() +
   geom_point(aes(x = day, y = nrflower), color = "red") +
   geom_point(aes(x = day, y = nrvisit)) +
+  facet_wrap(~ site)
+
+# Flowering E and M
+pheno2 %>%
+  group_by(stage, date, site) %>%
+  summarise(n = n(), nrflower = sum(flowering)) %>% 
+  filter(stage != "L") %>% 
+  ggplot() +
+  geom_line(aes(x = date, y = nrflower, color = stage)) +
+  facet_wrap(~ site)
+
+# Polli E and M
+pollinator %>%
+  group_by(stage, day, site) %>%
+  summarise(n = n(), nrvisit = mean(fly)) %>% 
+  filter(stage != "L") %>% 
+  ggplot() +
+  geom_point(aes(x = day, y = nrvisit, color = stage)) +
   facet_wrap(~ site)
