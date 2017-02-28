@@ -5,6 +5,7 @@ library("tidyr")
 library("dplyr")
 library("lubridate")
 library("ggplot2")
+library("readxl")
 
 #### READ IN DATA ####
 
@@ -60,14 +61,29 @@ dat <- pollinator %>%
   left_join(fl, by = c("day" = "day", "stage" = "stage", "site" = "site"))
 
 
+save(dat, file = "PhenologyPollination.RData")
+load("PhenologyPollination.RData")
+head(dat)
+
+save(pheno2, file = "Phenology.RData")
+load("Phenology.RData")
+
+save(pollinator, file = "Pollinator.RData")
+load("Pollinator.RData")
+
 # Plot flowering and visits together
 
-# Early
+
+# Mismatch: differnece in peak flowering - peak visit
 dat %>%
-  filter(stage == "E") %>% 
+  filter(stage != "L") %>% 
+  group_by(site, stage) %>% 
+  mutate(peak.flower = day[which.max(nrflower)], peak.fly = day[which.max(nrvisit)]) %>% 
+  mutate(diff = yday(peak.fly) - yday(peak.flower)) %>% 
   ggplot() +
-  geom_point(aes(x = day, y = nrflower), color = "red") +
-  geom_point(aes(x = day, y = nrvisit)) +
+  geom_point(aes(x = stage, y = diff, colour = stage)) +
+  geom_hline(yintercept = 0, color = "grey") +
+  labs(x = "Site", y = "Difference in days: peak flower - peak visit") +
   facet_wrap(~ site)
 
 # Mid
@@ -95,3 +111,63 @@ pollinator %>%
   ggplot() +
   geom_point(aes(x = day, y = nrvisit, color = stage)) +
   facet_wrap(~ site)
+
+pollinator %>% 
+  group_by(stage, day) %>% 
+  summarise(n = n(), meanvisit = mean(fly), se = sd(fly)/sqrt(n)) %>% 
+  mutate(day = ymd(day)) %>% 
+  ggplot(aes(x = day, y = meanvisit, ymin = meanvisit - se, ymax = meanvisit + se)) + 
+  geom_point() + 
+  geom_errorbar() +
+  scale_x_date() +
+  facet_wrap(~ stage)
+
+
+### Pollinaiton
+pollen <- read_excel("RanunculusPollination.xlsx", col_names = TRUE)
+head(pollen)
+
+pollen %>% 
+  select(Plot, Plant, Date1, Date2, Date3, DateCollection) %>% 
+  gather(key = Collection, value = Date, - Plot, -Plant)
+
+pollen <- read_excel("BiomassAndSeed.xlsx", col_names = TRUE)
+head(pollen)
+
+save(pollen, file = "Pollen.RData")
+load("Pollen.RData")
+
+pollen %>% 
+  fill(Plot) %>% 
+  mutate(stage = factor(substring(Plot, 1,1))) %>% 
+  mutate(site = factor(substring(Plot, 2,3))) %>% 
+  mutate(plot = factor(substring(Plot, 4,4))) %>% 
+  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
+  mutate(plant = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")) %>% 
+  select(-Plot, -Plant) %>% 
+  group_by(plant, site, stage) %>% 
+  ggplot(aes(x = plant, y = NumberOvule)) +
+  geom_boxplot() +
+  facet_wrap(~ stage)
+
+
+
+
+### NUMBER OF OBSERVATIONS  
+pheno2 %>% 
+  filter(flowering > 0) %>% 
+  mutate(day = dmy(format(date, "%d.%b.%Y"))) %>%
+  group_by(stage, site, day) %>% 
+  summarise(flower = sum(flowering)) %>% 
+  summarise(n = n()) %>% 
+  spread(key = stage, value = n)
+  
+
+pollinator %>% 
+  filter(fly > 0) %>% 
+  mutate(day = dmy(format(date, "%d.%b.%Y"))) %>%
+  group_by(stage, site, day) %>% 
+  summarise(flower = mean(fly)) %>% 
+  summarise(n = n()) %>% 
+  spread(key = stage, value = n)
+
