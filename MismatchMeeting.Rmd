@@ -1,0 +1,97 @@
+---
+title: "Meeting Mismatch Data"
+author: "Aud Halbritter"
+date: "27 2 2017"
+output: ioslides_presentation
+---
+
+## Questions & Hypothesis
+
+Will an increase in mismatch between plants and their pollinators decrease reproductive output and affect population viability?
+
+We expect reproductive output to decrease with increasing “mismatch”
+
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, cache = TRUE, message = FALSE, warning = FALSE, fig.height = 6, fig.width = 8)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.height = 5.5, fig.width = 8)
+knitr::read_chunk("ImportantFigures.R")
+
+```
+
+```{r loadPhenology}
+
+
+
+```
+
+```{r setTheme}
+th <- theme_bw(base_size = 12)
+
+```
+
+## Site set up
+```{r, eval = TRUE, out.width = "800px"}
+knitr::include_graphics("SiteE02.JPG")
+
+```
+
+
+
+## Phenology
+```{r PhenologyAllStages, eval = TRUE}
+
+```
+
+## Temperature
+```{r TemperatureData, eval = TRUE}
+
+```
+
+
+## Pollination
+```{r PollinationAllStages, eval = TRUE}
+
+```
+
+## Pollination
+```{r PollinationSummary, eval = TRUE}
+
+```
+
+
+## Differnce in peak flower and visit
+```{r MismatchPlot, eval = TRUE}
+
+```
+
+
+## Number of ripe seeds
+```{r NrRipeSeed, eval = TRUE}
+
+```
+
+
+
+## Difficulties
+
+
+- We did not use a snowmelt gradient: site with different timing of snowmelt
+- Many plots had no flowers inside (but many outside)
+- Sheep! Need to build fences from the start!
+- Data from early and mid stage are ok. Late was not ok!
+
+- Counting pollinators was challenging
+- Should we distinguish between different pollinators? (tiny flies, blosterfluer, vanlige fluer)
+
+
+- Did hand pollination work?
+
+
+## What to do next?
+- Fence all the plots properly
+- Start observations earlier?
+- Hope for a better summer
+- More effort for the hand pollination
+
+
