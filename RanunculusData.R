@@ -1,50 +1,155 @@
 ##### PHENOLOGY ######
 
 #### LIBRARIES
-library("tidyr")
-library("dplyr")
+library("tidyverse")
 library("lubridate")
-library("ggplot2")
 library("readxl")
 
-#### READ IN DATA ####
+pn <- . %>% print(n = Inf)
 
+########################################################################
+#### READ IN DATA 2016 ####
 
 # PHENOLOGY
-pheno <- read.csv("RANfenologi.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
-pheno <- as.data.frame(t(pheno), stringsAsFactors = FALSE) # transpose data
-names(pheno) <- pheno[1,] # first column = name
-pheno <- pheno[-1,] # remove first column
-pheno$date <- dmy_hm(paste(pheno$Dato, pheno$Tid))
-pheno$Dato <- NULL
-pheno$Tid <- NULL
-pheno2 <- gather(pheno, key = "plot", value = "flowering", -date, -Vaer, -Hvem) %>% 
+pheno16 <- read.csv("RANfenologi.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
+pheno16 <- as.data.frame(t(pheno16), stringsAsFactors = FALSE) # transpose data
+names(pheno16) <- pheno16[1,] # first column = name
+head(pheno16)
+
+pheno16 <- pheno16 %>% 
+  slice(-1) %>% # remove first column
+  gather(key = site, value = flowering, -Dato, -Tid, -Vaer, -Hvem) %>% 
+  as_tibble() %>% 
+  filter(flowering != "") %>% 
+  mutate(date = dmy(Dato)) %>% # do we need time?
+  select(-Dato, -Tid) %>% 
   mutate(flowering = as.numeric(flowering)) %>% 
-  mutate(stage = factor(substring(plot, 1,1))) %>% 
-  mutate(site = factor(substring(plot, 2,3))) %>% 
-  mutate(plot = factor(substring(plot, 4,4))) %>% 
-  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>% 
-  mutate(day = format(as.Date(date,format="%Y-%m-%d"))) %>%
-  filter(!is.na(flowering)) # remove NA
+  mutate(stage = factor(substring(site, 1,1))) %>% 
+  mutate(plot = factor(substring(site, 4,4))) %>% 
+  mutate(site = factor(substring(site, 2,3))) %>% 
+  mutate(day = format(as.Date(date,format="%Y-%m-%d")), year = year(date)) %>% 
+  rename(weather = Vaer, name = Hvem)
+  
+
+# POLLINATOR OBSERVATIONS
+pollination16 <- read.csv("RanunculusPollinator.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+pollination16 <- pollination16 %>%
+  as_tibble() %>% 
+  filter(!Tid == "") %>% # slette alle koloner med Na
+  # Fix date variables
+  mutate(date = dmy_hm(paste(Dato, Tid))) %>%# lime sammen dato å tid
+  mutate(minutes = (floor(minute(date)/10)*10)) %>%
+  mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>% # making 10 minutes steps
+  mutate(year = year (date), day = format(as.Date(date,format="%Y-%m-%d"))) %>%
+  # Fix  other variables
+  mutate(stage = substring(Site, 1,1), site = substring(Site, 2,3)) %>% # lage to nye variabler, stage og site
+  mutate(stage = factor(stage, levels = c("E", "M", "L")), site = factor(site)) %>%  # bestemme rekkefölgen for stage
+  mutate(fly = as.numeric(Fluer), other = as.numeric(andre)) %>% # make variables numeric
+  mutate(weather = plyr::mapvalues(sol.og.sky, c("overskyet","overskyet_littsol","sol_littsky","sol", "sol "), c("cloudy","cloudy_sun","sun_cloud","sun", "sun"))) %>% 
+  mutate(wind = as.factor(vind)) %>% 
+  mutate(remark = paste(regn, sommerfugler)) %>% 
+  select(-Tid, -Fluer, -Site, -Dato, -minutes, -sol.og.sky, -vind, -andre, -regn, -sommerfugler) # sletter her koloner ikke rekker, - betyr ta vekk
+
+########################################################################
+
+#### READ IN DATA 2017 ####
+
+# PHENOLOGY
+pheno17 <- read.csv2("~/Dropbox/Bergen/Mismatch/Data/2017/17-10-06_Phenology.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
+pheno17 <- pheno17[-c(155:186),] # remove F09 and F10
+pheno17 <- as.data.frame(t(pheno17), stringsAsFactors = FALSE) # transpose data
+names(pheno17) <- pheno17[1,] # first column = name
+
+pheno17 <- pheno17 %>% 
+  as_tibble() %>% 
+  slice(-1) %>% # remove first column
+  gather(key = site, value = flowering, -Date, -Time, -Weather, -Name) %>% 
+  filter(flowering != "") %>% 
+  #mutate(Time = substr(Time, 1, 5)) %>% # do we need time?
+  mutate(date = dmy(Date)) %>% 
+  select(-Date, -Time) %>% 
+  mutate(flowering = as.numeric(flowering)) %>% 
+  mutate(stage = factor(substring(site, 1,1))) %>% 
+  mutate(plot = factor(substring(site, 4,4))) %>% 
+  mutate(site = factor(substring(site, 2,3))) %>% 
+  mutate(day = format(as.Date(date,format="%Y-%m-%d")), year = year(date)) %>%
+  rename(weather = Weather, name = Name)
 
 
 # POLLINATOR OBSERVATIONS
-polli <- read.csv("RanunculusPollinator.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
-pollinator <- polli %>%
-  filter(!Tid == "") %>% # slette alle koloner med Na
-  mutate(date = dmy_hm(paste(Dato, Tid))) %>%# lime sammen dato å tid
-  mutate(fly = as.numeric(Fluer)) %>%
-  mutate(stage = substring(Site, 1,1), site = substring(Site, 2,3)) %>%# lage to nye variabler, stage å site
-  select(-Tid, -Fluer, -Site, -Dato) %>% # sletter her koloner ikke rekker, - betyr ta vekk
-  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%  # bestemme rekkefölgen for en faktor
-  mutate(minutes = (floor(minute(date)/10)*10)) %>%
+pollination17 <- read.csv("~/Dropbox/Bergen/Mismatch/Data/2017/17-10-06_Pollinatorobservations.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+
+pollination17 <- pollination17 %>%
+  select(-X, -wind.categories., -X.1, -X.2, -X.3, -X.4) %>% 
+  as_tibble() %>% 
+  filter(!Time == "") %>% # slette alle koloner med Na
+  # Fix date variables
+  mutate(date = dmy_hm(paste(Date, Time))) %>%# lime sammen dato å tid
+  mutate(minutes = (floor(minute(date)/10)*10)) %>% # round all the dates to 10 minutes
   mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>% # making 10 minutes steps
-  left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site")) %>% 
-  mutate(sol.og.sky = plyr::mapvalues(sol.og.sky, c("overskyet","overskyet_littsol","sol_littsky","sol"), c("overcast","cloudy","cloud_sun","sun"))) %>% 
-  mutate(sol.og.sky = factor(sol.og.sky, levels = c("overcast","cloudy","cloud_sun","sun"))) %>% 
+  mutate(year = year (date), day = format(as.Date(date, format="%Y-%m-%d"))) %>%
+  # Fix  other variables
+  mutate(stage = substring(Site, 1,1), site = substring(Site, 2,3)) %>%# lage to nye variabler, stage å site
+  mutate(stage = factor(stage, levels = c("F", "E", "M")), site = factor(site)) %>%  # bestemme rekkefölgen for stage
+  mutate(fly = as.numeric(Flies), other = as.numeric(Other)) %>% # make variables numeric
+  mutate(weather = plyr::mapvalues(Weather, c("cloud", "sun ","sun","sun_cloud","cloud_sun"), c("cloud", "sun","sun","sun_cloud","cloud_sun"))) %>% 
+  mutate(wind = as.factor(Wind)) %>% 
+  select(-Time, -Flies, -Site, -Date, -minutes, -Weather, -Wind, -Other) # sletter her koloner ikke rekker, - betyr ta vekk
+
+
+########################################################################
+
+### IMPORT SITE AND CLIMATE DATA ###
+sites <- read_excel("Sites.xlsx")
+sites <- sites %>% 
+  filter(!is.na(stage)) %>% # remove empty columns
+  mutate(area = width * length) %>% 
   mutate(site = factor(site)) %>% 
-  mutate(day = format(as.Date(date,format="%Y-%m-%d"))) %>%
-  select(-minutes.x, -minutes.y)
+  select(-width, -length)
+
+########################################################################
+
+### JOIN 2016 and 2017 DATA
+### PHENOLOGY
+phenology <- pheno16 %>% 
+  bind_rows(pheno17) %>% 
+  # fix weather !!!
+  left_join(sites, by = c("stage", "site")) %>% 
+  mutate(stage = factor(stage, levels = c("F", "E", "M", "L")))
+
+
+### POLLINATION
+pollination <- pollination16 %>% 
+  bind_rows(pollination17) %>% 
+  left_join(sites, by = c("stage", "site")) %>%  # add area of each site
+  # add climate data
+  #left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site"))
+  mutate(stage = factor(stage, levels = c("F", "E","M", "L"))) %>%
+  mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud")))
+
+########################################################################
+
+### TO DO!!!
+# merge with phenology data
+# fix day variable, should be a data
+# is 10 minutes data needed? to merge with phenology? there is only one phenolog data per day anyway. Should be merged with the closest day
+# should I claculate the mean daily pollinators: group_by(day, stage, site) %>% summarise(mean = mean(fly))
+
+phenology %>% 
+  group_by(day, stage, site) %>% 
+  summarise(mean = mean(flowering)) %>% 
+  ggplot(aes(x = day, y = mean, color = stage)) +
+  geom_point() +
+  facet_wrap(~ site)
+
+pollination %>% 
+  #filter(stage == "F") %>% 
+  group_by(day, stage, site) %>% 
+  summarise(mean = mean(fly)) %>% 
+  ggplot(aes(x = day, y = mean, colour = stage)) +
+  geom_point() +
+  facet_wrap(~ site)
+
 
 
 
@@ -54,11 +159,15 @@ fl <- pheno2 %>%
   summarise(n = n(), nrflower = sum(flowering)) %>% 
   select(-n)
 
+# join phenology and insect data sets
+# find closest phenology observation to insect observation and standardize insect observation by area and number of flowers!!!
 dat <- pollinator %>%
-  group_by(stage, day, site) %>%
-  summarise(n = n(), nrvisit = mean(fly)) %>%
-  select(-n) %>% 
   left_join(fl, by = c("day" = "day", "stage" = "stage", "site" = "site"))
+group_by(stage, day, site) %>%
+  summarise(n = n(), nrvisit = mean(fly)) %>%
+  select(-n)
+
+
 
 
 save(dat, file = "PhenologyPollination.RData")
@@ -150,6 +259,20 @@ pollen %>%
   geom_boxplot() +
   facet_wrap(~ stage)
 
+dd <- pollen %>% 
+  fill(Plot) %>% 
+  mutate(stage = factor(substring(Plot, 1,1))) %>% 
+  mutate(site = factor(substring(Plot, 2,3))) %>% 
+  mutate(plot = factor(substring(Plot, 4,4))) %>% 
+  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
+  mutate(plant = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")))
+
+hist(dd$NumberOvule)
+fit <- glm(NumberOvule ~ plant*stage, dd, family = "poisson")
+summary(fit)
+plot(fit) 
+
+
 
 
 
@@ -161,7 +284,7 @@ pheno2 %>%
   summarise(flower = sum(flowering)) %>% 
   summarise(n = n()) %>% 
   spread(key = stage, value = n)
-  
+
 
 pollinator %>% 
   filter(fly > 0) %>% 
@@ -170,4 +293,5 @@ pollinator %>%
   summarise(flower = mean(fly)) %>% 
   summarise(n = n()) %>% 
   spread(key = stage, value = n)
+
 
