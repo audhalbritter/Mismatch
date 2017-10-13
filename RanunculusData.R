@@ -11,7 +11,7 @@ pn <- . %>% print(n = Inf)
 #### READ IN DATA 2016 ####
 
 # PHENOLOGY
-pheno16 <- read.csv("RANfenologi.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
+pheno16 <- read.csv("Data/2016/RANfenologi.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
 pheno16 <- as.data.frame(t(pheno16), stringsAsFactors = FALSE) # transpose data
 names(pheno16) <- pheno16[1,] # first column = name
 head(pheno16)
@@ -32,7 +32,7 @@ pheno16 <- pheno16 %>%
   
 
 # POLLINATOR OBSERVATIONS
-pollination16 <- read.csv("RanunculusPollinator.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+pollination16 <- read.csv("Data/2016/RanunculusPollinator.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
 pollination16 <- pollination16 %>%
   as_tibble() %>% 
   filter(!Tid == "") %>% # slette alle koloner med Na
@@ -55,7 +55,7 @@ pollination16 <- pollination16 %>%
 #### READ IN DATA 2017 ####
 
 # PHENOLOGY
-pheno17 <- read.csv2("~/Dropbox/Bergen/Mismatch/Data/2017/17-10-06_Phenology.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
+pheno17 <- read.csv2("Data/2017/17-10-06_Phenology.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
 pheno17 <- pheno17[-c(155:186),] # remove F09 and F10
 pheno17 <- as.data.frame(t(pheno17), stringsAsFactors = FALSE) # transpose data
 names(pheno17) <- pheno17[1,] # first column = name
@@ -77,7 +77,7 @@ pheno17 <- pheno17 %>%
 
 
 # POLLINATOR OBSERVATIONS
-pollination17 <- read.csv("~/Dropbox/Bergen/Mismatch/Data/2017/17-10-06_Pollinatorobservations.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+pollination17 <- read.csv("Data/2017/17-10-06_Pollinatorobservations.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
 
 pollination17 <- pollination17 %>%
   select(-X, -wind.categories., -X.1, -X.2, -X.3, -X.4) %>% 
@@ -100,7 +100,7 @@ pollination17 <- pollination17 %>%
 ########################################################################
 
 ### IMPORT SITE AND CLIMATE DATA ###
-sites <- read_excel("Sites.xlsx")
+sites <- read_excel("Data/Sites.xlsx")
 sites <- sites %>% 
   filter(!is.na(stage)) %>% # remove empty columns
   mutate(area = width * length) %>% 
@@ -129,13 +129,83 @@ pollination <- pollination16 %>%
 
 ########################################################################
 
+### READ IN HAND-POLLINATION, BIOMASS AND REPRODUCTIVE OUTPUT ###
+
+### 2016
+pollen16 <- read_excel("Data/2016/RanunculusPollination.xlsx", col_names = TRUE, col_types = c("text", "text", "text", "date", "text", "date", "text", "date", "text", "text", "text"))
+
+
+pollen16 %>% 
+  select(Plot, Plant, Date1, Date2, Date3, DateCollection) %>% 
+  gather(key = Collection, value = Date, - Plot, -Plant)
+
+biomass16 <- read_excel("Data/2016/BiomassAndSeed.xlsx", col_names = TRUE)
+head(biomass16)
+### SOME PROBLEM WITH 2 PLANTS WHERE THERE ARE 2 PLANTS!!!
+
+
+pollen16 %>% 
+  fill(Plot) %>% 
+  mutate(stage = factor(substring(Plot, 1,1))) %>% 
+  mutate(site = factor(substring(Plot, 2,3))) %>% 
+  mutate(plot = factor(substring(Plot, 4,4))) %>% 
+  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
+  mutate(plant = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")) %>% 
+  select(-Plot, -Plant) %>% 
+  group_by(plant, site, stage) %>% 
+  ggplot(aes(x = plant, y = NumberOvule)) +
+  geom_boxplot() +
+  facet_wrap(~ stage)
+
+dd <- pollen %>% 
+  fill(Plot) %>% 
+  mutate(stage = factor(substring(Plot, 1,1))) %>% 
+  mutate(site = factor(substring(Plot, 2,3))) %>% 
+  mutate(plot = factor(substring(Plot, 4,4))) %>% 
+  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
+  mutate(plant = ifelse(Plant %in% c("C1", "C2", "Control", "Pollinated")))
+
+
+### 2017
+pollen17 <- read_excel("Data/2017/Vekt_planter_fro.xlsx", col_names = TRUE)
+
+# loop to get Plot in all cells
+LoopPlot <- function(dat){
+  for (i in 2:nrow(dat)){
+    if(is.na(nchar(dat$Plot[i]))){
+      dat$Plot[i] <- dat$Plot[i-1]
+    }
+  }
+  return(dat)
+}
+
+pollen17 <- LoopPlot(pollen17)
+
+pollen17 <- pollen17 %>% 
+  mutate(Stage = substring(Plot, 1,1), Subplot = substring(Plot, nchar(Plot), nchar(Plot)), Site = substring(Plot, 2, nchar(Plot)-1)) %>%
+  mutate(Stage = factor(Stage, levels = c("F", "E", "M")), Site = factor(Site)) %>% 
+  mutate(Treatment = plyr::mapvalues(Plant, c("C1", "C2", "HP1", "HP2"), c("Control", "Control", "Pollination", "Pollination")))
+  
+
+ggplot(pollen17, aes(x = Treatment, y = Biomass)) +
+  geom_boxplot() +
+  facet_grid( ~ Stage)
+
+ggplot(pollen17, aes(x = Treatment, y = ReproductiveOutput)) +
+  geom_boxplot() +
+  facet_grid( ~ Stage)
+
+
+
 ### TO DO!!!
-# merge with phenology data
+# merge pollination with phenology data
 # fix day variable, should be a data
 # is 10 minutes data needed? to merge with phenology? there is only one phenolog data per day anyway. Should be merged with the closest day
 # should I claculate the mean daily pollinators: group_by(day, stage, site) %>% summarise(mean = mean(fly))
+# import biomass and reproductive output data
 
 phenology %>% 
+  filter(year == 2017) %>% 
   group_by(day, stage, site) %>% 
   summarise(mean = mean(flowering)) %>% 
   ggplot(aes(x = day, y = mean, color = stage)) +
@@ -151,8 +221,7 @@ pollination %>%
   facet_wrap(~ site)
 
 
-
-
+#*****************************************************************************************
 # Calculate and plot mean nr of flowers per site
 fl <- pheno2 %>%
   group_by(stage, day, site) %>%
@@ -232,40 +301,6 @@ pollinator %>%
   facet_wrap(~ stage)
 
 
-### Pollinaiton
-pollen <- read_excel("RanunculusPollination.xlsx", col_names = TRUE)
-head(pollen)
-
-pollen %>% 
-  select(Plot, Plant, Date1, Date2, Date3, DateCollection) %>% 
-  gather(key = Collection, value = Date, - Plot, -Plant)
-
-pollen <- read_excel("BiomassAndSeed.xlsx", col_names = TRUE)
-head(pollen)
-
-save(pollen, file = "Pollen.RData")
-load("Pollen.RData")
-
-pollen %>% 
-  fill(Plot) %>% 
-  mutate(stage = factor(substring(Plot, 1,1))) %>% 
-  mutate(site = factor(substring(Plot, 2,3))) %>% 
-  mutate(plot = factor(substring(Plot, 4,4))) %>% 
-  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
-  mutate(plant = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")) %>% 
-  select(-Plot, -Plant) %>% 
-  group_by(plant, site, stage) %>% 
-  ggplot(aes(x = plant, y = NumberOvule)) +
-  geom_boxplot() +
-  facet_wrap(~ stage)
-
-dd <- pollen %>% 
-  fill(Plot) %>% 
-  mutate(stage = factor(substring(Plot, 1,1))) %>% 
-  mutate(site = factor(substring(Plot, 2,3))) %>% 
-  mutate(plot = factor(substring(Plot, 4,4))) %>% 
-  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
-  mutate(plant = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")))
 
 hist(dd$NumberOvule)
 fit <- glm(NumberOvule ~ plant*stage, dd, family = "poisson")
