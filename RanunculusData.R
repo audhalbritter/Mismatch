@@ -27,7 +27,7 @@ pheno16 <- pheno16 %>%
   mutate(stage = factor(substring(site, 1,1))) %>% 
   mutate(plot = factor(substring(site, 4,4))) %>% 
   mutate(site = factor(substring(site, 2,3))) %>% 
-  mutate(day = format(as.Date(date,format="%Y-%m-%d")), year = year(date)) %>% 
+  mutate(day = as.Date(date,format="%Y-%m-%d"), year = year(date)) %>% 
   rename(weather = Vaer, name = Hvem)
   
 
@@ -40,7 +40,7 @@ pollination16 <- pollination16 %>%
   mutate(date = dmy_hm(paste(Dato, Tid))) %>%# lime sammen dato å tid
   mutate(minutes = (floor(minute(date)/10)*10)) %>%
   mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>% # making 10 minutes steps
-  mutate(year = year (date), day = format(as.Date(date,format="%Y-%m-%d"))) %>%
+  mutate(year = year (date), day = as.Date(date,format="%Y-%m-%d")) %>%
   # Fix  other variables
   mutate(stage = substring(Site, 1,1), site = substring(Site, 2,3)) %>% # lage to nye variabler, stage og site
   mutate(stage = factor(stage, levels = c("E", "M", "L")), site = factor(site)) %>%  # bestemme rekkefölgen for stage
@@ -57,11 +57,10 @@ pollination16 <- pollination16 %>%
 # PHENOLOGY
 pheno17 <- read.csv2("Data/2017/17-10-06_Phenology.csv", header = FALSE, sep = ";", stringsAsFactors=FALSE)
 pheno17 <- pheno17[-c(155:186),] # remove F09 and F10
-pheno17 <- as.data.frame(t(pheno17), stringsAsFactors = FALSE) # transpose data
+pheno17 <- as_data_frame(t(pheno17)) # transpose data
 names(pheno17) <- pheno17[1,] # first column = name
 
 pheno17 <- pheno17 %>% 
-  as_tibble() %>% 
   slice(-1) %>% # remove first column
   gather(key = site, value = flowering, -Date, -Time, -Weather, -Name) %>% 
   filter(flowering != "") %>% 
@@ -72,7 +71,7 @@ pheno17 <- pheno17 %>%
   mutate(stage = factor(substring(site, 1,1))) %>% 
   mutate(plot = factor(substring(site, 4,4))) %>% 
   mutate(site = factor(substring(site, 2,3))) %>% 
-  mutate(day = format(as.Date(date,format="%Y-%m-%d")), year = year(date)) %>%
+  mutate(day = as.Date(date,format="%Y-%m-%d"), year = year(date)) %>%
   rename(weather = Weather, name = Name)
 
 
@@ -87,7 +86,7 @@ pollination17 <- pollination17 %>%
   mutate(date = dmy_hm(paste(Date, Time))) %>%# lime sammen dato å tid
   mutate(minutes = (floor(minute(date)/10)*10)) %>% # round all the dates to 10 minutes
   mutate(date = ymd_hm(paste0(format(date, "%Y-%m-%d %H:"), minutes))) %>% # making 10 minutes steps
-  mutate(year = year (date), day = format(as.Date(date, format="%Y-%m-%d"))) %>%
+  mutate(year = year (date), day = as.Date(date, format="%Y-%m-%d")) %>%
   # Fix  other variables
   mutate(stage = substring(Site, 1,1), site = substring(Site, 2,3)) %>%# lage to nye variabler, stage å site
   mutate(stage = factor(stage, levels = c("F", "E", "M")), site = factor(site)) %>%  # bestemme rekkefölgen for stage
@@ -127,6 +126,18 @@ pollination <- pollination16 %>%
   #left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site"))
   mutate(stage = factor(stage, levels = c("F", "E","M", "L"))) %>%
   mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud")))
+
+
+### JOIN PHENOLOGY AND POLLINATION ####
+
+phenology %>% 
+  group_by(year, stage, site) %>%  # group by year, stage and site to calculate first and peak
+  mutate(doy = yday(date)) %>% 
+  #mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
+  #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
+  summarize(first = first(doy), peak = doy[which.max(flowering)]) %>% pn
+
+
 
 ########################################################################
 
