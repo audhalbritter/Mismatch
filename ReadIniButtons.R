@@ -21,7 +21,7 @@ ReadIniButtons <- function(textfile){
 }
 
 # MAKE LIST OF ALL TXT FILES AND MERGE THEM TO ONE DATA FRAME
-myfiles <- dir(path = paste0("/Users/audhalbritter/Dropbox/mismatch/Data/iButtons"), pattern = "txt", recursive = TRUE, full.names = TRUE)
+myfiles <- dir(path = paste0("~/Dropbox/Bergen/Mismatch/Data/2016/iButtons"), pattern = "txt", recursive = TRUE, full.names = TRUE)
 mdat <- plyr::ldply(as.list(myfiles), ReadIniButtons)
 
 # Rename stage
@@ -39,6 +39,10 @@ Temperature <- Temperature[!(Temperature$stage == "late" & Temperature$date < as
 setwd("/Users/audhalbritter/Dropbox/mismatch/Analysis/Mismatch")
 save(Temperature, file = "TemperatureiButton.RData")
 
+
+ggplot(Temperature, aes(x = date, y = temperature)) +
+  geom_line() +
+  facet_wrap(~ site)
 
 # to check things
 mdat %>%
