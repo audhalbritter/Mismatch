@@ -31,7 +31,7 @@ pheno2 %>%
   summarise(n = n(), nrflower = sum(flowering)) %>% 
   #filter(stage != "L") %>% 
   ggplot() +
-  labs(x = "date", y = "Sum of flowers") +
+  labs(x = "", y = "Sum of flowers") +
   geom_line(aes(x = date, y = nrflower, color = stage)) +
   facet_wrap(~ site)
 
@@ -43,7 +43,7 @@ pollinator %>%
   summarise(n = n(), nrvisit = mean(fly)) %>% 
   #filter(stage != "L") %>% 
   ggplot() +
-  labs(x = "date", y = "Mean number of visits per day") +
+  labs(x = "", y = "Mean number of visits per day") +
   geom_point(aes(x = day, y = nrvisit, color = stage)) +
   scale_x_date() +
   facet_wrap(~ site)
@@ -55,6 +55,7 @@ pollinator %>%
   mutate(day = ymd(day)) %>% 
   ggplot(aes(x = day, y = meanvisit, ymin = meanvisit - se, ymax = meanvisit + se)) + 
   geom_point() + 
+  labs(x = "", y = "Mean number of visits per day") +
   geom_errorbar() +
   scale_x_date() +
   facet_wrap(~ stage)
@@ -69,7 +70,7 @@ dat %>%
   ggplot() +
   geom_point(aes(x = stage, y = diff, colour = stage)) +
   geom_hline(yintercept = 0, color = "grey") +
-  labs(x = "Site", y = "Difference in days: peak flower - peak visit") +
+  labs(x = "", y = "Peak flower - peak visit in days") +
   facet_wrap(~ site)
 
 
