@@ -132,7 +132,7 @@ pollination <- pollination16 %>%
 ### JOIN PHENOLOGY AND POLLINATION ####
 
 # Find closest phenology observation to each pollination observation
-pollination %>% 
+pollination2 <- pollination %>% 
   full_join(phenology, by = c("site", "stage"), suffix = c(".poll",".fl")) %>% 
   select(-weather, -wind, -remark, -area) %>% 
   mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
@@ -140,6 +140,8 @@ pollination %>%
   group_by(day.poll, stage, site) %>% 
   slice(which.min(abs.diff.mult)) %>% 
   mutate(flowering = ifelse(abs.diff > 3, NA, flowering)) # could check how much different flowers are
+# add area
+# standardize insect observation by fl per area
 
 
 # calculate first flower and peak flower and insect obsesrvations
