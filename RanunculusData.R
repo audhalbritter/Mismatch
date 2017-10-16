@@ -114,8 +114,9 @@ sites <- sites %>%
 phenology <- pheno16 %>% 
   bind_rows(pheno17) %>% 
   # fix weather !!!
-  left_join(sites, by = c("stage", "site")) %>% 
-  mutate(stage = factor(stage, levels = c("F", "E", "M", "L")))
+  mutate(stage = factor(stage, levels = c("F", "E", "M", "L"))) %>% 
+  group_by(day, stage, site) %>% 
+  summarise(flowering = mean(flowering))
 
 
 ### POLLINATION
@@ -130,6 +131,18 @@ pollination <- pollination16 %>%
 
 ### JOIN PHENOLOGY AND POLLINATION ####
 
+# Find closest phenology observation to each pollination observation
+pollination %>% 
+  full_join(phenology, by = c("site", "stage"), suffix = c(".poll",".fl")) %>% 
+  select(-weather, -wind, -remark, -area) %>% 
+  mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
+  mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
+  group_by(day.poll, stage, site) %>% 
+  slice(which.min(abs.diff.mult)) %>% 
+  mutate(flowering = ifelse(abs.diff > 3, NA, flowering)) # could check how much different flowers are
+
+
+# calculate first flower and peak flower and insect obsesrvations
 phenology %>% 
   group_by(year, stage, site) %>%  # group by year, stage and site to calculate first and peak
   mutate(doy = yday(date)) %>% 
