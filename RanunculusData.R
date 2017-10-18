@@ -119,7 +119,7 @@ phenology <- pheno16 %>%
   mutate(stage = factor(stage, levels = c("F", "E", "M", "L"))) %>% 
   group_by(day, stage, site) %>% 
   summarise(flowering = mean(flowering))
-
+head(phenology)
 
 ### POLLINATION
 pollination <- pollination16 %>% 
@@ -146,15 +146,17 @@ pollination2 <- pollination %>%
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
 
 
-# calculate first flower and peak flower and insect obsesrvations
+# calculate first flower and peak flower and std.insect observations
 phenology %>% 
   group_by(year, stage, site) %>%  # group by year, stage and site to calculate first and peak
   mutate(doy = yday(date)) %>% 
   #mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
   #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
-  summarize(first = first(doy), peak = doy[which.max(flowering)]) %>% pn
+  summarize(first = first(doy), peak = doy[which.max(flowering)])
 
-
+pollination2 %>% 
+  group_by(year, stage, site) %>% 
+  mutate()
 ########################################################################
 
 ### READ IN HAND-POLLINATION, BIOMASS AND REPRODUCTIVE OUTPUT ###
