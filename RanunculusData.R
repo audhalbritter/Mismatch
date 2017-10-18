@@ -1,5 +1,7 @@
 ##### PHENOLOGY ######
-
+install.packages("tidyverse")
+install.packages("lubridate")
+install.packages("readxl")
 #### LIBRARIES
 library("tidyverse")
 library("lubridate")
@@ -76,7 +78,7 @@ pheno17 <- pheno17 %>%
 
 
 # POLLINATOR OBSERVATIONS
-pollination17 <- read.csv("Data/2017/17-10-06_Pollinatorobservations.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+pollination17 <- read.csv("Data/2017/17-10-16_Pollinatorobservations.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
 
 pollination17 <- pollination17 %>%
   select(-X, -wind.categories., -X.1, -X.2, -X.3, -X.4) %>% 
@@ -134,14 +136,14 @@ pollination <- pollination16 %>%
 # Find closest phenology observation to each pollination observation
 pollination2 <- pollination %>% 
   full_join(phenology, by = c("site", "stage"), suffix = c(".poll",".fl")) %>% 
-  select(-weather, -wind, -remark, -area) %>% 
+  select(-weather, -wind, -remark) %>% 
   mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
   mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
   group_by(day.poll, stage, site) %>% 
   slice(which.min(abs.diff.mult)) %>% 
-  mutate(flowering = ifelse(abs.diff > 3, NA, flowering)) # could check how much different flowers are
-# add area
-# standardize insect observation by fl per area
+  mutate(flowering = ifelse(abs.diff > 3, NA, flowering)) %>% # could check how much different flowers are
+  mutate(tot.flowers = flowering*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
+  mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
 
 
 # calculate first flower and peak flower and insect obsesrvations
@@ -151,7 +153,6 @@ phenology %>%
   #mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
   #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
   summarize(first = first(doy), peak = doy[which.max(flowering)]) %>% pn
-
 
 
 ########################################################################
