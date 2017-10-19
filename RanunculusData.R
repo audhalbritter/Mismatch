@@ -1,7 +1,5 @@
 ##### PHENOLOGY ######
-install.packages("tidyverse")
-install.packages("lubridate")
-install.packages("readxl")
+
 #### LIBRARIES
 library("tidyverse")
 library("lubridate")
@@ -121,6 +119,10 @@ phenology <- pheno16 %>%
   summarise(flowering = mean(flowering)) %>% 
   mutate(fl.sqm = flowering*2)
 
+save(phenology, file = "Phenology.RData")
+
+
+
 ### POLLINATION
 pollination <- pollination16 %>% 
   bind_rows(pollination17) %>% 
@@ -131,9 +133,37 @@ pollination <- pollination16 %>%
   mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud"))) %>% 
   mutate(poll.sqm = fly/area)
 
+save(pollination, file = "Pollinaton.RData")
+
+
+# LOAD DATA
+### INSTEAD OF USING ALL THE CODE ABOVE, YOU CAN JUST LOAD THE DATA
+
+load("Phenology.RData")
+load("Pollinaton.RData")
+
+
+
+### CALCULATE FIRST AND PEAK FLOWERING AND INSECT OBSERVATION
+
+phenology %>% 
+  mutate(doy = yday(day)) %>% 
+  group_by(year, stage, site) %>%   # group by year, stage and site to calculate first and peak
+  summarize(first = first(doy), peak = doy[which.max(flowering)])
+#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
+#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
+#group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
+
+
+pollination %>% 
+  select(poll.sqm, year, stage, site, date) %>% 
+  group_by(year, stage, site)%>% 
+  mutate(doy = yday(date)) %>% 
+  summarize(first = first(doy), peak = doy[which.max(poll.sqm)])
+
+
 
 ### JOIN PHENOLOGY AND POLLINATION ####
-
 # Find closest phenology observation to each pollination observation
 pollination2 <- pollination %>% 
   full_join(phenology, by = c("site", "stage"), suffix = c(".poll",".fl")) %>% 
@@ -147,30 +177,9 @@ pollination2 <- pollination %>%
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
 
 
-# calculate first flower and peak flower and std.insect observations
-phenology %>% 
-  mutate(doy = yday(day)) %>% 
-  group_by(year, stage, site) %>%   # group by year, stage and site to calculate first and peak
-  summarize(first = first(doy), peak = doy[which.max(flowering)])
-#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
-#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
-  #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
- 
-
-ddd <- pollination2 %>% 
-  ungroup() %>% 
-  select(std.fly, year, stage, site, date) %>% 
-  group_by(year, stage, site)%>% 
-  mutate(doy = yday(date)) %>% 
-  filter(year == "2016", stage == "E", site == "06")
-
-ddd$doy[which.max(ddd$std.fly)]
 
 
 
-  summarize(first = first(doy), peak = doy[which.max(std.fly)])
-
-  summarize(first = first(doy), peak = doy[which.max(std.fly)])
 ########################################################################
 
 ### READ IN HAND-POLLINATION, BIOMASS AND REPRODUCTIVE OUTPUT ###
@@ -242,10 +251,7 @@ ggplot(pollen17, aes(x = Treatment, y = ReproductiveOutput)) +
 
 
 ### TO DO!!!
-# merge pollination with phenology data
-# fix day variable, should be a data
 # is 10 minutes data needed? to merge with phenology? there is only one phenolog data per day anyway. Should be merged with the closest day
-# should I claculate the mean daily pollinators: group_by(day, stage, site) %>% summarise(mean = mean(fly))
 # import biomass and reproductive output data
 
 phenology %>% 
@@ -266,34 +272,7 @@ pollination %>%
 
 
 #*****************************************************************************************
-# Calculate and plot mean nr of flowers per site
-fl <- pheno2 %>%
-  group_by(stage, day, site) %>%
-  summarise(n = n(), nrflower = sum(flowering)) %>% 
-  select(-n)
 
-# join phenology and insect data sets
-# find closest phenology observation to insect observation and standardize insect observation by area and number of flowers!!!
-dat <- pollinator %>%
-  left_join(fl, by = c("day" = "day", "stage" = "stage", "site" = "site"))
-group_by(stage, day, site) %>%
-  summarise(n = n(), nrvisit = mean(fly)) %>%
-  select(-n)
-
-
-
-
-save(dat, file = "PhenologyPollination.RData")
-load("PhenologyPollination.RData")
-head(dat)
-
-save(pheno2, file = "Phenology.RData")
-load("Phenology.RData")
-
-save(pollinator, file = "Pollinator.RData")
-load("Pollinator.RData")
-
-# Plot flowering and visits together
 
 
 # Mismatch: differnece in peak flowering - peak visit
