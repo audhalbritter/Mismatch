@@ -117,9 +117,9 @@ phenology <- pheno16 %>%
   bind_rows(pheno17) %>% 
   # fix weather !!!
   mutate(stage = factor(stage, levels = c("F", "E", "M", "L"))) %>% 
-  group_by(day, stage, site) %>% 
-  summarise(flowering = mean(flowering))
-head(phenology)
+  group_by(day, stage, site, year) %>% 
+  summarise(flowering = mean(flowering)) %>% 
+  mutate(fl.sqm = flowering*2)
 
 ### POLLINATION
 pollination <- pollination16 %>% 
@@ -128,7 +128,8 @@ pollination <- pollination16 %>%
   # add climate data
   #left_join(Temperature, by = c("date" = "date", "stage" = "stage", "site" = "site"))
   mutate(stage = factor(stage, levels = c("F", "E","M", "L"))) %>%
-  mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud")))
+  mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud"))) %>% 
+  mutate(poll.sqm = fly/area)
 
 
 ### JOIN PHENOLOGY AND POLLINATION ####
@@ -148,15 +149,28 @@ pollination2 <- pollination %>%
 
 # calculate first flower and peak flower and std.insect observations
 phenology %>% 
-  group_by(year, stage, site) %>%  # group by year, stage and site to calculate first and peak
-  mutate(doy = yday(date)) %>% 
-  #mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
-  #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
+  mutate(doy = yday(day)) %>% 
+  group_by(year, stage, site) %>%   # group by year, stage and site to calculate first and peak
   summarize(first = first(doy), peak = doy[which.max(flowering)])
+#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
+#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
+  #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
+ 
 
-pollination2 %>% 
-  group_by(year, stage, site) %>% 
-  mutate()
+ddd <- pollination2 %>% 
+  ungroup() %>% 
+  select(std.fly, year, stage, site, date) %>% 
+  group_by(year, stage, site)%>% 
+  mutate(doy = yday(date)) %>% 
+  filter(year == "2016", stage == "E", site == "06")
+
+ddd$doy[which.max(ddd$std.fly)]
+
+
+
+  summarize(first = first(doy), peak = doy[which.max(std.fly)])
+
+  summarize(first = first(doy), peak = doy[which.max(std.fly)])
 ########################################################################
 
 ### READ IN HAND-POLLINATION, BIOMASS AND REPRODUCTIVE OUTPUT ###
