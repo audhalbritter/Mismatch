@@ -14,11 +14,11 @@ PhenoPollinationMap <- function(df){
   }
 PhenoPollinationMap
 
-# Combine phenology and standardized insect visitation
+# Combine phenology and pollination (using flowers and pollinators pr. square meter)
 AllData <- phenology %>%
-  select(day, site, stage, flowering) %>%
-  left_join(pollination2, by = c("day" = "day.poll", "site", "stage", "flowering")) %>%
-  gather(key = observation, value = value, flowering, std.fly)
+  bind_rows(pollination) %>% 
+  select(day, site, stage, fl.sqm, poll.sqm) %>%
+  gather(key = observation, value = value, fl.sqm, poll.sqm)
 
 ## plot maps
 Maps2017 <- AllData %>% 
@@ -32,9 +32,9 @@ dev.off()
 
 
 AllData %>%
-  filter(site == "01", stage == "F")
-  ggplot(df, aes(x = day, y = value, color = observation, shape = observation)) 
+  filter(site == "01", stage == "F") %>% 
+  ggplot(aes(x = day, y = value, color = observation, shape = observation)) +
   geom_point() +
   facet_wrap(~ site) +
-  theme_minimal()
-  ggtitle(unique(paste(df$stage, df$site, sep = " ")))
+  theme_minimal() 
+  ggtitle(unique(paste(stage, site, sep = " "))) #Error in paste(stage, site, sep = " ") : object 'stage' not found
