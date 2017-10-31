@@ -13,15 +13,25 @@ peak.data <- peak.fl %>%
 
 View(peak.data)
 
-
 # Making plot showing peak difference by site
 ggplot(peak.data, aes(y = peak.diff, x = siteID)) +
   geom_point() +
   theme_minimal()
 
 
-### BY DATE OF SNOWMELT ###
+### BY SNOWMELT-DATE ###
 
+#importing snowmelt-dataset and joining with peak-data
+library(readxl)
+Date_snowmelt <- read_excel("~/Mismatch/Data/2017/Date_snowmelt.xlsx")
 
+peak_snowmelt <- peak.data %>% 
+  full_join(Date_snowmelt, by=c("stage"="stage", "siteID"="site")) %>% 
+  mutate(doy = yday(Snowmelt_date))
+
+View(peak_snowmelt)
 
 # Making plot showing peak difference by date of snowmelt
+ggplot(peak_snowmelt, aes(y = peak.diff, x = doy)) +
+  geom_point() +
+  theme_minimal()
