@@ -146,22 +146,25 @@ load("Pollinaton.RData")
 
 ### CALCULATE FIRST AND PEAK FLOWERING AND INSECT OBSERVATION
 
-phenology %>% 
+peak.fl <- phenology %>% 
   mutate(doy = yday(day)) %>% 
   group_by(year, stage, site) %>%   # group by year, stage and site to calculate first and peak
-  summarize(first = first(doy), peak = doy[which.max(flowering)])
+  summarize(first = first(doy), peak = doy[which.max(fl.sqm)]) %>% 
+  rename(peak.fl = peak)
 #mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
 #mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
 #group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
 
+View(peak.fl)
 
-pollination %>% 
+peak.pol <- pollination %>% 
   select(poll.sqm, year, stage, site, date) %>% 
   group_by(year, stage, site)%>% 
   mutate(doy = yday(date)) %>% 
-  summarize(first = first(doy), peak = doy[which.max(poll.sqm)])
+  summarize(first = first(doy), peak = doy[which.max(poll.sqm)]) %>% 
+  rename(peak.pol = peak)
 
-
+View(peak.pol)
 
 ### JOIN PHENOLOGY AND POLLINATION ####
 # Find closest phenology observation to each pollination observation
