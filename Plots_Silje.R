@@ -1,4 +1,3 @@
-
 ##### PEAK DIFFERENCE PLOT #######################################
 
 ### BY SITE ###
@@ -33,5 +32,47 @@ View(peak_snowmelt)
 
 # Making plot showing peak difference by date of snowmelt
 ggplot(peak_snowmelt, aes(y = peak.diff, x = doy)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  theme_minimal()
+
+
+
+
+##### REPRODUCTIVE OUTPUT PLOT #####################################
+
+#importing biomass data
+library(readxl)
+Biomass <- read_excel("~/Mismatch/Data/2017/Biomass.xlsx")
+View(Biomass)
+
+### BY SITE ###
+Biomass %>% 
+  mutate(Stage = factor(Stage, levels = c("F", "E","M", "L")))
+
+ggplot(Biomass, aes(y=Seed_mass, x=Plant_type)) +
+  geom_boxplot() +
+  facet_grid(~Stage) + 
+  theme_minimal() #outliers were re-weighed: they are correct
+
+
+### BY SNOWMELT DATE ###
+Biomass.snowmelt <- Biomass %>% 
+  left_join(Date_snowmelt, by=c("Site"="site", "Stage"="stage")) %>% 
+  mutate(Stage = factor(Stage, levels = c("F", "E","M", "L"))) %>% 
+  mutate(doy = yday(Snowmelt_date))
+
+ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=doy, color=Plant_type)) +
+  geom_point() +
+  theme_minimal()
+
+ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=Plant_type)) +
+  geom_boxplot() +
+  facet_grid(~doy)
+  theme_minimal()
+
+### PLOTTING SEEDS AGAINST BIOMASS ###
+
+ggplot(Biomass, aes(y=Seed_mass, x=Biomass, color=Plant_type)) +
   geom_point() +
   theme_minimal()
