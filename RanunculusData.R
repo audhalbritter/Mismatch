@@ -119,7 +119,7 @@ phenology <- pheno16 %>%
   summarise(flowering = mean(flowering)) %>% 
   mutate(fl.sqm = flowering*2)
 
-save(phenology, file = "Phenology.RData")
+#save(phenology, file = "Phenology.RData")
 
 
 
@@ -133,14 +133,14 @@ pollination <- pollination16 %>%
   mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud"))) %>% 
   mutate(poll.sqm = fly/area)
 
-save(pollination, file = "Pollinaton.RData")
+#save(pollination, file = "Pollinaton.RData")
 
 
 # LOAD DATA
 ### INSTEAD OF USING ALL THE CODE ABOVE, YOU CAN JUST LOAD THE DATA
 
-load("Phenology.RData")
-load("Pollinaton.RData")
+#load("Phenology.RData")
+#load("Pollinaton.RData")
 
 
 
