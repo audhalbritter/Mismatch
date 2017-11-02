@@ -2,6 +2,7 @@
 
 dat <- phenology %>% 
   filter(year == "2017") %>% 
+  #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day))
 
 
@@ -39,13 +40,14 @@ PredictFlower <- function(dat){
   fit2 <- glm(round(fl.sqm, 0) ~ doy + I(doy^2) + I(doy^3), data = dat, family = "poisson")
   new.dat <- data.frame(doy = seq(min(dat$doy), max(dat$doy), length.out = 30))
   new.dat$pred <- exp(predict(fit2, new.dat))
-  res <- data_frame(new.dat)
+  new.dat$pred
+  res <- data_frame(pred = new.dat$pred)
   return(res)
 }
 
 dat %>% 
   group_by(site, stage) %>%
-  do(PredictFlower(.)) %>% pn
+  do(PredictFlower(.))
 
 
 ### INSECTS
