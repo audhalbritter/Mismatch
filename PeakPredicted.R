@@ -45,15 +45,15 @@ PredictFlower <- function(dat){
   return(res)
 }
 
-pred.fl <- dat %>%  #does no work anymore when giving this a new name (pred.fl)...
+pred.fl <- dat %>%
   group_by(site, stage, doy) %>%
   do(PredictFlower(.))
 
 
-??? %>% #Cannot figure out what's supposed to go here...
-  group_by(stage, site) %>%
-  summarize(first = first(doy), peak = doy[which.max(pred)], end = end(doy)) %>% 
-  rename(peak.fl = peak)
+PredFl <- pred.fl %>%
+  group_by(site, stage) %>%
+  summarize(first = first(doy), peak = doy[which.max(pred)], last = last(doy)) %>% 
+  rename(first.fl = first, peak.fl = peak, last.fl = last)
 
 
 
@@ -99,12 +99,27 @@ PredictPollinator <- function(dat){
   return(res)
 }
 
-dat %>% 
+pred.poll %>% 
   group_by(site, stage, doy) %>%
   do(PredictPollinator(.))
 
 
-??? %>% #Cannot figure out what's supposed to go here...
+PredPoll <- pred.poll %>%
   group_by(stage, site) %>%
-  summarize(first = first(doy), peak = doy[which.max(pred)], end = end(doy)) %>% 
-  rename(peak.poll = peak)
+  summarize(first = first(doy), peak = doy[which.max(pred)], last = last(doy)) %>% 
+  rename(first.poll = first, peak.poll = peak, last.poll = last)
+
+
+
+##### JOINING FLOWERS AND INSECTS
+
+AllPred <- PredPoll %>% 
+  left_join(PredFl, by=c("stage"="stage", "site"="site")) %>% 
+  mutate(peak.diff = peak.fl-peak.poll, siteID = paste(stage, site)) %>% 
+  #mutate(stage = factor(stage, levels = c("F", "E", "M"))) #Error in mutate_impl(.data, dots) : cannot modify grouping variable
+  
+
+# PLOTTING PEAK DIFF AGAINST SITE
+ggplot(AllPred, aes(y = peak.diff, x = siteID)) +
+  geom_point() +
+  theme_minimal()
