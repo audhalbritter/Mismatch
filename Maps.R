@@ -81,3 +81,32 @@ Maps2017$pheno.maps[1]
 pdf(file = "Maps2017.pdf")
 Maps2017$pheno.maps
 dev.off()
+
+##### MAPS, USING PREDICTED VALUES
+
+pred.both <- pred.fl %>% 
+  rename(pred.fl=pred) %>% 
+  left_join(pred.poll, by=c("site"="site", "stage"="stage", "doy"="doy")) %>% 
+  rename(pred.poll=pred)
+
+
+PhenoPollMapPredicted <- function(df){
+  flowers <- df %>% filter(!is.na(pred.fl))
+  flies <- df %>% filter(!is.na(pred.poll))
+  ggplot(flowers, aes(x = doy, y = pred.fl, colour = "Flowers")) +
+    geom_point() +
+    geom_line() +
+    geom_point(data=flies, aes(y=pred.poll, colour = "Flies")) +
+    geom_line(data=flies, aes(y=pred.poll, colour = "Flies")) +
+    scale_y_continuous(sec.axis = sec_axis(~./20, name = expression(Pollinators~m^-2))) +
+    labs(y=expression(Flowers~m^-2), colour = "", x = "")+
+    theme_minimal()
+}
+
+MapsPred2017 <- pred.both %>% 
+  group_by(site, stage) %>%
+  do(pred.maps = PhenoPollMapPredicted(.))
+MapsPred2017$pred.maps[1]
+pdf(file = "MapsPred2017.pdf")
+MapsPred2017$pred.maps
+dev.off()
