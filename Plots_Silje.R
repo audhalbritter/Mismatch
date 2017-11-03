@@ -4,7 +4,7 @@
 
 # Joining data and creating peak difference
 peak.data <- peak.fl %>%
-    left_join(peak.pol, by=c("year"="year", "stage"="stage", "site"="site")) %>% 
+  left_join(peak.pol, by=c("year"="year", "stage"="stage", "site"="site")) %>% 
   select(year, stage, site, peak.fl, peak.pol) %>%
   filter(year == "2017") %>% 
   mutate(peak.diff = peak.fl-peak.pol) %>% 
@@ -74,5 +74,16 @@ ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=Plant_type)) +
 ### PLOTTING SEEDS AGAINST BIOMASS ###
 
 ggplot(Biomass, aes(y=Seed_mass, x=Biomass, color=Plant_type)) +
+  geom_point() +
+  theme_minimal()
+
+
+### PLOTTING REPRODUCTIVE OUTPUT AGAINST DEGREE OF MISMATCH (PEAK DIFF)
+
+Reprod <- Biomass %>% 
+  left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
+  select(Stage, Site, Plant_type, Seed_mass, peak.diff)
+
+ggplot(Reprod, aes(y=Seed_mass, x=peak.diff, color=Plant_type)) +
   geom_point() +
   theme_minimal()
