@@ -116,8 +116,10 @@ PredPoll <- pred.poll %>%
 AllPred <- PredPoll %>% 
   left_join(PredFl, by=c("stage"="stage", "site"="site")) %>% 
   mutate(peak.diff = peak.fl-peak.poll, siteID = paste(stage, site)) %>% 
-  #mutate(stage = factor(stage, levels = c("F", "E", "M"))) #Error in mutate_impl(.data, dots) : cannot modify grouping variable
-  
+
+AllPred$siteID <- as.character(AllPred$siteID)
+AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))  
+
 
 # PLOTTING PEAK DIFF AGAINST SITE
 ggplot(AllPred, aes(y = peak.diff, x = siteID)) +
