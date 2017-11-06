@@ -79,7 +79,7 @@ pheno17 <- pheno17 %>%
 pollination17 <- read.csv("Data/2017/17-10-31_Pollinatorobservations.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
 
 pollination17 <- pollination17 %>%
-  select(-X, -wind.categories., -X.1, -X.2, -X.3, -X.4) %>% 
+  #select(-X,-wind.categories., -X.1, -X.2, -X.3, -X.4) %>% 
   as_tibble() %>% 
   filter(!Time == "") %>% # slette alle koloner med Na
   # Fix date variables
