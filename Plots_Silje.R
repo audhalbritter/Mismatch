@@ -50,6 +50,9 @@ View(Biomass)
 Biomass %>% 
   mutate(Stage = factor(Stage, levels = c("F", "E","M", "L")))
 
+Biomass$Stage <- as.character(Biomass$Stage)
+Biomass$Stage <- factor(Biomass$Stage, levels=c("F", "E", "M")) 
+
 ggplot(Biomass, aes(y=Seed_mass, x=Plant_type)) +
   geom_boxplot() +
   facet_grid(~Stage) + 
