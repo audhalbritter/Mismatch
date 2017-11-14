@@ -90,3 +90,23 @@ Reprod <- Biomass %>%
 ggplot(Reprod, aes(y=Seed_mass, x=peak.diff, color=Plant_type)) +
   geom_point() +
   theme_minimal()
+
+
+
+##### WEATHER THROUGHOUT SEASON #####################################
+weather <- pollination %>% 
+  select(year, day, weather) %>% 
+  mutate(doy = yday(day)) %>% 
+  filter(year == "2017")
+
+ggplot(weather, aes(y=weather, x=doy, colour=weather)) +
+  geom_point()
+
+
+wind <- pollination %>%
+  select(year, day, wind) %>% 
+  mutate(doy = yday(day)) %>% 
+  filter(year == "2017")
+
+ggplot(wind, aes(y=wind, x=doy)) +
+  geom_point()
