@@ -111,11 +111,46 @@ pdf(file = "MapsPred2017.pdf")
 MapsPred2017$pred.maps
 dev.off()
 
+###### PLOTTING REAL AND PREDICTED DATA ######
 
+# Flower data
+FlowerData <- dat.fl %>% 
+  left_join(pred.fl, by = c("site", "stage", "doy"))
 
-dat %>% 
+FlowerRealAndPred <- function(FlowerData){
+    ggplot(aes(x = doy, y = flower.sum)) +
+    geom_point() +
+    geom_line(aes(y = pred))
+  }
+FlowerRealAndPred
+
+FlowerCurves <- FlowerData %>% 
+  #filter(year(day) == "2017") %>% 
+  group_by(site, stage) %>%
+  do(flower.curves = FlowerRealAndPred(.))
+
+pdf(file = "FlowerCurves.pdf")
+FlowerCurves$flower.curves
+dev.off()
+
+# Testing for one site
+FlowerData <- dat.fl %>% 
   left_join(pred.fl, by = c("site", "stage", "doy")) %>% 
-  filter(site == "01", stage == "F") %>% 
-  ggplot(aes(x = doy, y = flower.sum)) +
+  filter(site == "01", stage == "F")
+
+ggplot(aes(x = doy, y = flower.sum)) +
   geom_point() +
   geom_line(aes(y = pred))
+
+  
+# Pollinator data
+PollinatorData <- dat.pol %>% 
+  #filter(site == "01", stage == "F") %>%
+  left_join(pred.poll, by = c("site", "stage", "doy"))
+
+ggplot(aes(x = doy, y = fly)) +
+  geom_point() +
+  geom_line(aes(y = pred))
+
+
+   
