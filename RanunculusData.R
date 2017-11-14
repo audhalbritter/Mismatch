@@ -116,8 +116,8 @@ phenology <- pheno16 %>%
   # fix weather !!!
   mutate(stage = factor(stage, levels = c("F", "E", "M", "L"))) %>% 
   group_by(day, stage, site, year) %>% 
-  summarise(flowering = mean(flowering)) %>% 
-  mutate(fl.sqm = flowering*2)
+  summarise(flower.sum = sum(flowering), flower.mean = mean(flowering)) %>% 
+  mutate(fl.sqm = flower.mean*2)
 
 save(phenology, file = "Phenology.RData")
 
