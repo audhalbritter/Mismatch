@@ -110,3 +110,12 @@ MapsPred2017$pred.maps[1]
 pdf(file = "MapsPred2017.pdf")
 MapsPred2017$pred.maps
 dev.off()
+
+
+
+dat %>% 
+  left_join(pred.fl, by = c("site", "stage", "doy")) %>% 
+  filter(site == "01", stage == "F") %>% 
+  ggplot(aes(x = doy, y = flower.sum)) +
+  geom_point() +
+  geom_line(aes(y = pred))
