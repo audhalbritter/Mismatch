@@ -53,7 +53,7 @@ Biomass %>%
 Biomass$Stage <- as.character(Biomass$Stage)
 Biomass$Stage <- factor(Biomass$Stage, levels=c("F", "E", "M")) 
 
-ggplot(Biomass, aes(y=Seed_mass, x=Plant_type)) +
+ggplot(Biomass, aes(y=Seed_mass, x=Plant_type, color = Plant_type)) +
   geom_boxplot() +
   facet_grid(~Stage) + 
   theme_minimal() #outliers were re-weighed: they are correct
@@ -65,7 +65,7 @@ Biomass.snowmelt <- Biomass %>%
   mutate(Stage = factor(Stage, levels = c("F", "E","M", "L"))) %>% 
   mutate(doy = yday(Snowmelt_date))
 
-ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=doy, color=Plant_type)) +
+ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=doy, color=Stage)) +
   geom_point() +
   theme_minimal()
 
@@ -76,7 +76,7 @@ ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=Plant_type)) +
 
 ### PLOTTING SEEDS AGAINST BIOMASS ###
 
-ggplot(Biomass, aes(y=Seed_mass, x=Biomass, color=Plant_type)) +
+ggplot(Biomass, aes(y=Seed_mass, x=Biomass, color=Plant_type, symbol)) +
   geom_point() +
   theme_minimal()
 
@@ -87,11 +87,13 @@ Reprod <- Biomass %>%
   left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
   select(Stage, Site, Plant_type, Seed_mass, peak.diff)
 
-ggplot(Reprod, aes(y=Seed_mass, x=peak.diff, color=Plant_type)) +
+ggplot(Reprod, aes(y=Seed_mass, x=peak.diff, color=Stage, shape=Plant_type)) +
   geom_point() +
   theme_minimal()
 
-
+ggplot(Reprod, aes(y=Seed_mass, x = peak.diff, color = Stage)) +
+  geom_boxplot() +
+  theme_minimal()
 
 ##### WEATHER THROUGHOUT SEASON #####################################
 weather <- pollination %>% 
