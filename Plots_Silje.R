@@ -87,7 +87,9 @@ Reprod <- Biomass %>%
   left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
   select(Stage, Site, Plant_type, Seed_mass, peak.diff)
 
-ggplot(Reprod, aes(y=Seed_mass, x=peak.diff, color=Stage, shape=Plant_type)) +
+Reprod %>% 
+  filter(Plant_type == "C", Stage != "M") %>% 
+  ggplot(aes(y=Seed_mass, x=peak.diff, color=Stage)) +
   geom_point() +
   theme_minimal()
 
@@ -96,6 +98,36 @@ ggplot(Reprod, aes(y=Seed_mass, x = peak.diff, color = Stage)) +
   theme_minimal()
 
 ##### WEATHER THROUGHOUT SEASON #####################################
+weather <- read_excel("~/Mismatch/Data/2017/Finse_weather.xlsx")
+View(weather)
+
+Weather <- weather %>% 
+  mutate(precipitation = as.numeric(precipitation), temperature = as.numeric(temperature)) %>%    mutate(doy = yday(date)) %>% 
+  filter(doy>151)
+
+ggplot(Weather, aes(x = doy, y = temperature, color="Temperature")) +
+  geom_point()+
+  geom_line() + labs(y="Temperature(°C)", color="", x="Day of snowmelt") +
+  geom_point(aes(y = precipitation, color="Precipitation")) +
+  geom_line(aes(y=precipitation, color="Precipitation")) +
+  scale_y_continuous(sec.axis = sec_axis(~./2), name = "Precipitation(mm)") +
+  theme_minimal()
+
+ggplot(Weather, aes(y=temperature, x=doy) +
+  geom_point()+
+  geom_line()
+
+Weather %>% 
+  
+  ggplot(aes(x=date, y=precipitation)) +
+  geom_line()
+
+ggplot(Weather, aes(x=doy, y = temperature)) +
+  geom_point()
+
+
+
+################################
 weather <- pollination %>% 
   select(year, day, weather) %>% 
   mutate(doy = yday(day)) %>% 
