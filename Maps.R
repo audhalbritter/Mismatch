@@ -117,10 +117,13 @@ dev.off()
 FlowerData <- dat.fl %>% 
   left_join(pred.fl, by = c("site", "stage", "doy"))
 
-FlowerRealAndPred <- function(FlowerData){
-    ggplot(aes(x = doy, y = flower.sum)) +
+
+
+FlowerRealAndPred <- function(dat){
+    ggplot(dat, aes(x = doy, y = flower.sum)) +
     geom_point() +
-    geom_line(aes(y = pred))
+    geom_line(aes(y = pred)) +
+    ggtitle(unique(paste(dat$stage, dat$site, sep = " ")))
   }
 FlowerRealAndPred
 
