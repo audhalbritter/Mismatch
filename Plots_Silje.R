@@ -36,7 +36,19 @@ ggplot(peak_snowmelt, aes(y = peak.diff, x = doy)) +
   geom_smooth(method = "lm", formula = y ~ x) +
   theme_minimal()
 
+#Using predicted data
+MismatchSnow <- AllPred %>% 
+  select(stage, siteID, peak.diff) %>%
+  left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="site" ))
 
+ggplot(MismatchSnow, aes(y=peak.diff, x=Snowmelt_date, color=stage)) +
+  #geom_point() +
+  geom_jitter() +
+  labs(y="Mismatch", x="Date of snowmelt", color="Stage") +
+  theme_minimal()
+  
+  
+  
 
 
 ##### REPRODUCTIVE OUTPUT PLOT #####################################
@@ -97,6 +109,7 @@ ggplot(Reprod, aes(y=Seed_mass, x = peak.diff, color = Stage)) +
   geom_boxplot() +
   theme_minimal()
 
+
 ##### WEATHER THROUGHOUT SEASON #####################################
 weather <- read_excel("~/Mismatch/Data/2017/Finse_weather.xlsx")
 View(weather)
@@ -105,12 +118,21 @@ Weather <- weather %>%
   mutate(precipitation = as.numeric(precipitation), temperature = as.numeric(temperature)) %>%    mutate(doy = yday(date)) %>% 
   filter(doy>151)
 
-ggplot(Weather, aes(x = doy, y = temperature, color="Temperature")) +
+ggplot(Weather, aes(x = date, y = precipitation, color="Precipitation")) +
   geom_point()+
-  geom_line() + labs(y="Temperature(°C)", color="", x="Day of snowmelt") +
-  geom_point(aes(y = precipitation, color="Precipitation")) +
-  geom_line(aes(y=precipitation, color="Precipitation")) +
-  scale_y_continuous(sec.axis = sec_axis(~./2), name = "Precipitation(mm)") +
+  geom_line() + labs(y = "Precipitation(mm)", color="", x="") +
+  geom_point(aes(y = (temperature*2), color="Temperature")) +
+  geom_line(aes(y=(temperature*2), color="Temperature")) +
+  scale_y_continuous(sec.axis = sec_axis(~./2, name = "Temperature(°C)")) +
+  scale_color_manual(values=c("#00BFC4", "#F8766D")) +
+  theme_minimal()
+
+ggplot(Weather, aes(x = date, y = temperature, color="Temperature")) +
+  geom_point()+
+  geom_line() + labs(y="Temperature(°C)", color="", x="") +
+  geom_point(aes(y = (precipitation), color="Precipitation")) +
+  geom_line(aes(y = (precipitation), color="Precipitation")) +
+  scale_y_continuous(sec.axis = sec_axis(~./1, name = "Precipitation(mm)")) +
   theme_minimal()
 
 ggplot(Weather, aes(y=temperature, x=doy) +
