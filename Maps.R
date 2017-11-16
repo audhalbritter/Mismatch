@@ -111,7 +111,7 @@ pdf(file = "MapsPred2017.pdf")
 MapsPred2017$pred.maps
 dev.off()
 
-###### PLOTTING REAL AND PREDICTED DATA ######
+########## PLOTTING REAL AND PREDICTED DATA ######################################################
 
 # Flower data
 FlowerData <- dat.fl %>% 
@@ -136,7 +136,8 @@ pdf(file = "FlowerCurves.pdf")
 FlowerCurves$flower.curves
 dev.off()
 
-# Testing for one site
+#*******************************************************************************
+#Testing for one site
 FlowerData <- dat.fl %>% 
   left_join(pred.fl, by = c("site", "stage", "doy")) %>% 
   filter(site == "01", stage == "F")
@@ -144,16 +145,72 @@ FlowerData <- dat.fl %>%
 ggplot(aes(x = doy, y = flower.sum)) +
   geom_point() +
   geom_line(aes(y = pred))
+#*******************************************************************************
 
-  
 # Pollinator data
 PollinatorData <- dat.pol %>% 
   #filter(site == "01", stage == "F") %>%
   left_join(pred.poll, by = c("site", "stage", "doy"))
 
-ggplot(aes(x = doy, y = fly)) +
-  geom_point() +
-  geom_line(aes(y = pred))
-
-
+PollRealAndPred <- function(dat){
+  ggplot(dat, aes(x = doy, y = fly)) +
+    geom_point() +
+    geom_line(aes(y = pred)) +
+    ggtitle(unique(paste(dat$stage, dat$site, sep = " ")))
+}
+PollRealAndPred
    
+PollinatorCurves <- PollinatorData %>% 
+  #filter(year(day) == "2017") %>% 
+  group_by(site, stage) %>%
+  do(pollinator.curves = PollRealAndPred(.))
+
+pdf(file = "PollinatorCurves.pdf")
+PollinatorCurves$pollinator.curves
+dev.off()
+
+
+
+### Combining flower and pollinator data (real and predicted data) ###
+FlowerPollData <- FlowerData %>% 
+  mutate(pred.fl = pred) %>%
+  select(stage, site, flower.sum, doy, pred.fl, day) %>% 
+  left_join(PollinatorData, by=c("stage", "site", "doy", "day")) %>% 
+  mutate(pred.pol = pred) %>% 
+  select(stage, site, doy, fly, pred.pol, flower.sum, pred.fl, day)
+
+ComboMap <- function(df){
+  ggplot(aes(x = doy, y = flower.sum, color = "Flowers")) +
+  geom_point() +
+  geom_line(aes(y = pred.fl)) +
+  geom_point(data=pollinator(aes(y=fly, color="Pollinators"))) +
+  geom_line(aes(y = pred.pol))+
+  scale_y_continuous(sec.axis = sec_axis(~./1), name = "Pollinator visitation") +
+  labs(y=expression(Flowers), color="", x="Day of the year") +
+  theme_minimal()
+}
+ComboMap
+
+ComboCurves <- FlowerPollData %>% 
+  group_by(site, stage) %>%
+  do(combo.curves = ComboMap(.))
+
+pdf(file = "ComboCurves.pdf")
+ComboCurves$combo.curves
+dev.off()
+
+
+
+#*********Testing for one specific site*********************************************
+p2 <- FlowerPollData %>%
+  filter(site == "01", stage == "E") %>% 
+  ggplot(aes(x = doy, y = flower.sum, color = "Flowers")) +
+  geom_point() +
+  geom_line(aes(y = pred.fl)) +
+  geom_point(aes(y=fly, color="Pollinators")) +
+  geom_line(aes(y = pred.pol, color="Pollinators")) +
+  scale_y_continuous(sec.axis = sec_axis(~./20), name = "Pollinator visitation") +
+  labs(y="Flowers", color="", x="Day of the year") +
+  theme_minimal()
+p2
+#************************************************************************************
