@@ -39,7 +39,11 @@ ggplot(peak_snowmelt, aes(y = peak.diff, x = doy)) +
 #Using predicted data
 MismatchSnow <- AllPred %>% 
   select(stage, siteID, peak.diff) %>%
-  left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="site" ))
+  left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="site" )) %>% 
+  mutate(stage = factor(stage, levels = c("F", "E","M")))
+
+MismatchSnow$stage <- as.character(MismatchSnow$stage)
+MismatchSnow$stage <- factor(MismatchSnow$stage, levels=c("F", "E", "M")) 
 
 ggplot(MismatchSnow, aes(y=peak.diff, x=Snowmelt_date, color=stage)) +
   #geom_point() +
@@ -47,7 +51,7 @@ ggplot(MismatchSnow, aes(y=peak.diff, x=Snowmelt_date, color=stage)) +
   labs(y="Mismatch", x="Date of snowmelt", color="Stage") +
   theme_minimal()
   
-  
+
   
 
 
@@ -68,17 +72,19 @@ Biomass$Stage <- factor(Biomass$Stage, levels=c("F", "E", "M"))
 ggplot(Biomass, aes(y=Seed_mass, x=Plant_type, color = Plant_type)) +
   geom_boxplot() +
   facet_grid(~Stage) + 
-  theme_minimal() #outliers were re-weighed: they are correct
+  theme_minimal() + #outliers were re-weighed: they are correct
+  labs(y="Reproductive output", x="Treatment", color="")
 
 
 ### BY SNOWMELT DATE ###
 Biomass.snowmelt <- Biomass %>% 
   left_join(Date_snowmelt, by=c("Site"="site", "Stage"="stage")) %>% 
-  mutate(Stage = factor(Stage, levels = c("F", "E","M", "L"))) %>% 
-  mutate(doy = yday(Snowmelt_date))
+  mutate(Stage = factor(Stage, levels = c("F", "E","M", "L"))) 
+  #mutate(doy = yday(Snowmelt_date))
 
-ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=doy, color=Stage)) +
+ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=Snowmelt_date, color=Stage)) +
   geom_point() +
+  labs(x="Date of snowmelt", y="Reproductive output") +
   theme_minimal()
 
 ggplot(Biomass.snowmelt, aes(y=Seed_mass, x=Plant_type)) +
@@ -99,10 +105,15 @@ Reprod <- Biomass %>%
   left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
   select(Stage, Site, Plant_type, Seed_mass, peak.diff)
 
+Reprod$Stage <- as.character(Reprod$Stage)
+Reprod$Stage <- factor(Reprod$Stage, levels=c("F", "E", "M")) 
+
+
 Reprod %>% 
-  filter(Plant_type == "C", Stage != "M") %>% 
+  #filter(Plant_type == "C", Stage != "M") %>% 
   ggplot(aes(y=Seed_mass, x=peak.diff, color=Stage)) +
   geom_point() +
+  labs(y="Reproductive output", x="Mismatch") +
   theme_minimal()
 
 ggplot(Reprod, aes(y=Seed_mass, x = peak.diff, color = Stage)) +
@@ -115,7 +126,8 @@ weather <- read_excel("~/Mismatch/Data/2017/Finse_weather.xlsx")
 View(weather)
 
 Weather <- weather %>% 
-  mutate(precipitation = as.numeric(precipitation), temperature = as.numeric(temperature)) %>%    mutate(doy = yday(date)) %>% 
+  mutate(precipitation = as.numeric(precipitation), temperature = as.numeric(temperature)) %>%
+  mutate(doy = yday(date)) %>% 
   filter(doy>151)
 
 ggplot(Weather, aes(x = date, y = precipitation, color="Precipitation")) +
