@@ -207,10 +207,11 @@ p2 <- FlowerPollData %>%
   ggplot(aes(x = doy, y = flower.sum, color = "Flowers")) +
   geom_point() +
   geom_line(aes(y = pred.fl)) +
+  labs(y="Flowers", color="", x="Day of the year") +
   geom_point(aes(y=fly, color="Pollinators")) +
   geom_line(aes(y = pred.pol, color="Pollinators")) +
-  scale_y_continuous(sec.axis = sec_axis(~./20), name = "Pollinator visitation") +
-  labs(y="Flowers", color="", x="Day of the year") +
+  scale_y_continuous(sec.axis = sec_axis(~./15, name = "Pollinator visitation")) +
   theme_minimal()
+  
 p2
 #************************************************************************************
