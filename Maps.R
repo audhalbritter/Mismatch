@@ -184,7 +184,7 @@ ComboMap <- function(df){
   geom_point() +
   geom_line(aes(y = pred.fl)) +
   geom_point(aes(y = fly), color = "red") +
-  geom_line(aes(y = pred.poll), color = "red") +
+  geom_line(aes(y = pred.pol), color = "red") +
   scale_y_continuous(sec.axis = sec_axis(~./1), name = "Pollinator visitation") +
   labs(y=expression(Flowers), color="", x="Day of the year") +
   theme_minimal()
@@ -194,7 +194,7 @@ ComboMap
 ComboCurves <- FlowerPollData %>% 
   group_by(site, stage) %>%
   do(combo.curves = ComboMap(.))
-
+ComboCurves$combo.curves[1]
 pdf(file = "ComboCurves.pdf")
 ComboCurves$combo.curves
 dev.off()
