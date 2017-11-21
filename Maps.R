@@ -180,11 +180,11 @@ FlowerPollData <- FlowerData %>%
   select(stage, site, doy, fly, pred.pol, flower.sum, pred.fl, day)
 
 ComboMap <- function(df){
-  ggplot(aes(x = doy, y = flower.sum, color = "Flowers")) +
+  ggplot(df, aes(x = doy, y = flower.sum)) +
   geom_point() +
   geom_line(aes(y = pred.fl)) +
-  geom_point(data=pollinator(aes(y=fly, color="Pollinators"))) +
-  geom_line(aes(y = pred.pol))+
+  geom_point(aes(y = fly), color = "red") +
+  geom_line(aes(y = pred.poll), color = "red") +
   scale_y_continuous(sec.axis = sec_axis(~./1), name = "Pollinator visitation") +
   labs(y=expression(Flowers), color="", x="Day of the year") +
   theme_minimal()
@@ -198,6 +198,36 @@ ComboCurves <- FlowerPollData %>%
 pdf(file = "ComboCurves.pdf")
 ComboCurves$combo.curves
 dev.off()
+
+
+### Aud tried something
+
+pred.pl <- pred.poll %>% 
+  mutate(variable = "insect", pred = pred*10)
+
+pred <- pred.fl %>% 
+  mutate(variable = "flower") %>% 
+  rbind(pred.pl)
+
+fl <- dat.fl %>% 
+  ungroup() %>% 
+  select(doy, stage, site, flower.sum) %>% 
+  mutate(variable = "flower") %>% 
+  rename(value = flower.sum)
+
+all <- dat.pol %>% 
+  select(doy, stage, site, fly) %>% 
+  mutate(variable = "insect", fly = 10*fly) %>% 
+  rename(value = fly) %>% 
+  rbind(fl) %>% 
+  left_join(pred, by = c("site", "stage", "doy", "variable"))
+
+all %>% 
+  filter(site == "03", stage == "E") %>% 
+  ggplot(aes(x = doy, y = value, color = variable)) +
+  geom_point() +
+  geom_line(aes(y = pred, color = variable)) +
+  scale_y_continuous(sec.axis= sec_axis(~./10, name="pollinator"))
 
 
 
