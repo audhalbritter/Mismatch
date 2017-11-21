@@ -123,4 +123,4 @@ AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))
 
 # Comparing peaks (flowers and pollinators)
 
-lm(peak.fl~peak.poll, AllPred)
+summary(lm(peak.fl~peak.poll, AllPred))
