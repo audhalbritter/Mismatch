@@ -178,3 +178,24 @@ wind <- pollination %>%
 
 ggplot(wind, aes(y=wind, x=doy)) +
   geom_point()
+
+
+### Days from snowmelt to first flower
+First <- phenology %>% 
+  filter(year == 2017) %>% 
+  mutate(doy = yday(day)) %>% 
+  group_by(stage, site) %>% 
+  summarise(first = first(doy), peak = doy[which.max(flower.sum)], last = last(doy)) %>% 
+  rename(Stage=stage, Site = site) %>% 
+  select(Stage, Site, first) %>%
+  bind_cols(Date_snowmelt) %>% 
+  select(Stage, Site, first, Snowmelt_date) %>% 
+  mutate(day = as.Date(Snowmelt_date)) %>% 
+  mutate(doy = yday(day)) %>% 
+  mutate(lag = first-doy)
+
+#plot
+First %>% 
+  ggplot(aes(x=day, y = lag, color=Stage)) +
+  geom_point() +
+  theme_minimal()
