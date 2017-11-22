@@ -194,7 +194,6 @@ ComboMap
 ComboCurves <- FlowerPollData %>% 
   group_by(site, stage) %>%
   do(combo.curves = ComboMap(.))
-ComboCurves$combo.curves[1]
 pdf(file = "ComboCurves.pdf")
 ComboCurves$combo.curves
 dev.off()
@@ -203,33 +202,52 @@ dev.off()
 ### Aud tried something
 
 pred.pl <- pred.poll %>% 
-  mutate(variable = "insect", pred = pred*10)
+  mutate(variable = "pollinators", pred = pred*10)
 
 pred <- pred.fl %>% 
-  mutate(variable = "flower") %>% 
+  mutate(variable = "flowers") %>% 
   rbind(pred.pl)
 
 fl <- dat.fl %>% 
   ungroup() %>% 
   select(doy, stage, site, flower.sum) %>% 
-  mutate(variable = "flower") %>% 
+  mutate(variable = "flowers") %>% 
   rename(value = flower.sum)
 
 all <- dat.pol %>% 
   select(doy, stage, site, fly) %>% 
-  mutate(variable = "insect", fly = 10*fly) %>% 
+  mutate(variable = "pollinators", fly = 10*fly) %>% 
   rename(value = fly) %>% 
   rbind(fl) %>% 
   left_join(pred, by = c("site", "stage", "doy", "variable"))
 
 all %>% 
-  filter(site == "03", stage == "E") %>% 
+  filter(site == "04", stage == "E") %>% 
   ggplot(aes(x = doy, y = value, color = variable)) +
   geom_point() +
   geom_line(aes(y = pred, color = variable)) +
-  scale_y_continuous(sec.axis= sec_axis(~./10, name="pollinator"))
+  labs(x = "Day of the year", y = "No. flowers") +
+  scale_y_continuous(sec.axis= sec_axis(~./10, name="Pollinator visitation rate")) +
+  ggtitle("E 04", subtitle = NULL) +
+  theme_minimal()
 
+# PLOT
+combined <- function(dat){dat %>% 
+    ggplot(aes(x = doy, y = value, color = variable)) +
+    geom_point() +
+    geom_line(aes(y = pred, color = variable)) +
+    labs(x = "Day of the year", y = "No. flowers") +
+    scale_y_continuous(sec.axis= sec_axis(~./10, name="Pollinator visitation rate")) +
+    ggtitle(unique(paste(dat$stage, dat$site, sep = " "))) +
+    theme_minimal()
+  }
 
+ComboCurves <- all %>% 
+  group_by(site, stage) %>%
+  do(combo.curves = combined(.))
+pdf(file = "ComboCurves.pdf")
+ComboCurves$combo.curves
+dev.off()
 
 #*********Testing for one specific site*********************************************
 p2 <- FlowerPollData %>%
