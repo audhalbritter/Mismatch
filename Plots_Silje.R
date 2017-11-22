@@ -51,8 +51,14 @@ ggplot(MismatchSnow, aes(y=peak.diff, x=Snowmelt_date, color=stage)) +
   labs(y="Mismatch", x="Date of snowmelt", color="Stage") +
   theme_minimal()
   
+### Peak flowering vs. peak pollinators
 
-  
+AllPred %>%
+  ggplot(aes(x = peak.poll, y = peak.fl, color = stage)) +
+  geom_point() + labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Stage") +
+  geom_abline(slope = 0.6221, intercept = 75.6327, color = "blue") +
+  geom_abline(slope = 1, color = "grey80") +
+  theme_minimal()
 
 
 ##### REPRODUCTIVE OUTPUT PLOT #####################################
@@ -111,8 +117,8 @@ Reprod$Stage <- factor(Reprod$Stage, levels=c("F", "E", "M"))
 
 Reprod %>% 
   #filter(Plant_type == "C", Stage != "M") %>% 
-  ggplot(aes(y=Seed_mass, x=peak.diff, color=Stage)) +
-  geom_point() +
+  ggplot(aes(y=Seed_mass, x=abs(peak.diff), color=Stage)) +
+  geom_jitter() +
   labs(y="Reproductive output", x="Mismatch") +
   theme_minimal()
 
@@ -121,7 +127,18 @@ ggplot(Reprod, aes(y=Seed_mass, x = peak.diff, color = Stage)) +
   theme_minimal()
 
 
-##### WEATHER THROUGHOUT SEASON #####################################
+## PLOTTING REPRODUCTIVE OUTPUT AGAINST OVERLAP
+output.overlap <- Biomass %>% 
+  select(Stage, Site, Block, Plant_type, Seed_mass) %>% 
+  left_join(Overlap_data, by=c("Stage"="stage", "Site"="siteID")) %>% 
+  select(Stage, Site, Block, Plant_type, Seed_mass, overlap)
+
+output.overlap %>% 
+  ggplot(aes(x = overlap, y = Seed_mass)) +
+  geom_point() + labs(x = "Reproductive output", y = "Overlap in occurance (no. days)") +
+  theme_minimal()
+
+##### WEATHER THROUGHOUT SEASON ###############################################
 weather <- read_excel("~/Mismatch/Data/2017/Finse_weather.xlsx")
 View(weather)
 
@@ -130,38 +147,16 @@ Weather <- weather %>%
   mutate(doy = yday(date)) %>% 
   filter(doy>151)
 
-ggplot(Weather, aes(x = date, y = precipitation, color="Precipitation")) +
+ggplot(Weather, aes(x = date, y = precipitation, color="Precipitation (daily avg.)")) +
   geom_point()+
   geom_line() + labs(y = "Precipitation(mm)", color="", x="") +
-  geom_point(aes(y = (temperature*2), color="Temperature")) +
-  geom_line(aes(y=(temperature*2), color="Temperature")) +
+  geom_point(aes(y = (temperature*2), color="Temperature (°C)")) +
+  geom_line(aes(y=(temperature*2), color="Temperature (°C)")) +
   scale_y_continuous(sec.axis = sec_axis(~./2, name = "Temperature(°C)")) +
-  scale_color_manual(values=c("#00BFC4", "#F8766D")) +
+  scale_color_manual(labels = c ("Precipitation (daily avg.)","Temperature (daily avg.)"), values=c("#00BFC4", "#F8766D")) +
   theme_minimal()
 
-ggplot(Weather, aes(x = date, y = temperature, color="Temperature")) +
-  geom_point()+
-  geom_line() + labs(y="Temperature(°C)", color="", x="") +
-  geom_point(aes(y = (precipitation), color="Precipitation")) +
-  geom_line(aes(y = (precipitation), color="Precipitation")) +
-  scale_y_continuous(sec.axis = sec_axis(~./1, name = "Precipitation(mm)")) +
-  theme_minimal()
-
-ggplot(Weather, aes(y=temperature, x=doy) +
-  geom_point()+
-  geom_line()
-
-Weather %>% 
-  
-  ggplot(aes(x=date, y=precipitation)) +
-  geom_line()
-
-ggplot(Weather, aes(x=doy, y = temperature)) +
-  geom_point()
-
-
-
-################################
+#*******************************************************************************
 weather <- pollination %>% 
   select(year, day, weather) %>% 
   mutate(doy = yday(day)) %>% 
@@ -178,9 +173,11 @@ wind <- pollination %>%
 
 ggplot(wind, aes(y=wind, x=doy)) +
   geom_point()
+#************************************************************
 
-
-### Days from snowmelt to first flower
+  
+  
+##### DAYS FROM SNOWMELT TO FIRST FLOWER ##############################################
 First <- phenology %>% 
   filter(year == 2017) %>% 
   mutate(doy = yday(day)) %>% 
@@ -199,3 +196,32 @@ First %>%
   ggplot(aes(x=day, y = lag, color=Stage)) +
   geom_point() +
   theme_minimal()
+
+
+##### TIME OF SNOWMELT/SITES ##################################################
+
+snowmelt <- Date_snowmelt %>% 
+  mutate(day = as.Date(Snowmelt_date)) %>% 
+  mutate(doy = yday(day)) %>% 
+  mutate(stage = factor(stage, levels = c("F", "E","M")))  
+
+snowmelt %>% 
+  ggplot(aes(x = stage, y = doy, color = stage)) +
+  geom_jitter() +
+  theme_minimal()
+
+
+
+##### POLLINATION/FLOWERING-OVERLAP #########################
+
+Overlap_data <- AllPred %>%
+  mutate(first = ifelse(first.poll > first.fl, first.poll, first.fl)) %>%
+  mutate(last = ifelse(last.poll < last.fl, last.poll, last.fl)) %>%
+  mutate(overlap = last - first)
+
+Overlap_data %>% 
+  ggplot(aes(x = siteID, y = overlap, color = stage)) +
+  geom_point() + labs(x = "Site", y = "Overlap in occurance (no. days)") +
+  theme_minimal()
+
+
