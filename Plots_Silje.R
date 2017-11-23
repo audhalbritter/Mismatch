@@ -45,20 +45,22 @@ MismatchSnow <- AllPred %>%
 MismatchSnow$stage <- as.character(MismatchSnow$stage)
 MismatchSnow$stage <- factor(MismatchSnow$stage, levels=c("F", "E", "M")) 
 
-ggplot(MismatchSnow, aes(y=peak.diff, x=Snowmelt_date, color=stage)) +
+ggplot(MismatchSnow, aes(y=abs(peak.diff), x=Snowmelt_date, color=stage)) +
   #geom_point() +
   geom_jitter() +
-  labs(y="Mismatch", x="Date of snowmelt", color="Stage") +
-  theme_minimal()
+  labs(y="Mismatch (no. days)", x="Date of snowmelt", color="Stage") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  theme_minimal(base_size = 18)
   
 ### Peak flowering vs. peak pollinators
 
 AllPred %>%
   ggplot(aes(x = peak.poll, y = peak.fl, color = stage)) +
   geom_point() + labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Stage") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   geom_abline(slope = 0.6221, intercept = 75.6327, color = "blue") +
-  geom_abline(slope = 1, color = "grey80") +
-  theme_minimal()
+  geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
+  theme_minimal(base_size = 18)
 
 
 ##### REPRODUCTIVE OUTPUT PLOT #####################################
@@ -75,11 +77,14 @@ Biomass %>%
 Biomass$Stage <- as.character(Biomass$Stage)
 Biomass$Stage <- factor(Biomass$Stage, levels=c("F", "E", "M")) 
 
-ggplot(Biomass, aes(y=Seed_mass, x=Plant_type, color = Plant_type)) +
+stage_names <- c("F"="E", "E"="M", "M"="L")
+
+ggplot(Biomass, aes(y=Seed_mass, x=Plant_type, fill=as.factor(Plant_type))) +
   geom_boxplot() +
-  facet_grid(~Stage) + 
-  theme_minimal() + #outliers were re-weighed: they are correct
-  labs(y="Reproductive output", x="Treatment", color="")
+  facet_grid(~Stage, labeller = as_labeller(stage_names)) + 
+  theme_minimal(base_size = 18) + #outliers were re-weighed: they are correct
+  labs(y="Reproductive output (g)", x="Treatment", fill="Treatment")+
+  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)"), values = c("#F8766D", "#00BA38"))
 
 
 ### BY SNOWMELT DATE ###
@@ -119,8 +124,9 @@ Reprod %>%
   #filter(Plant_type == "C", Stage != "M") %>% 
   ggplot(aes(y=Seed_mass, x=abs(peak.diff), color=Stage)) +
   geom_jitter() +
-  labs(y="Reproductive output", x="Mismatch") +
-  theme_minimal()
+  labs(y="Reproductive output (g)", x="Mismatch") +
+  scale_color_manual(labels = c("E", "M", "L"), values = c("#F8766D", "#00BA38", "#619CFF")) +
+  theme_minimal(base_size = 18)
 
 ggplot(Reprod, aes(y=Seed_mass, x = peak.diff, color = Stage)) +
   geom_boxplot() +
@@ -134,9 +140,10 @@ output.overlap <- Biomass %>%
   select(Stage, Site, Block, Plant_type, Seed_mass, overlap)
 
 output.overlap %>% 
-  ggplot(aes(x = overlap, y = Seed_mass)) +
-  geom_point() + labs(x = "Reproductive output", y = "Overlap in occurance (no. days)") +
-  theme_minimal()
+  ggplot(aes(x = overlap, y = Seed_mass, color = Stage)) +
+  geom_jitter() + labs(x = "Overlap in occurance (no. days)", y = "Reproductive output (g)") +
+  scale_color_manual(labels = c("E", "M", "L"), values = c("#F8766D", "#00BA38", "#619CFF")) +
+  theme_minimal(base_size = 18)
 
 ##### WEATHER THROUGHOUT SEASON ###############################################
 weather <- read_excel("~/Mismatch/Data/2017/Finse_weather.xlsx")
@@ -153,8 +160,8 @@ ggplot(Weather, aes(x = date, y = precipitation, color="Precipitation (daily avg
   geom_point(aes(y = (temperature*2), color="Temperature (°C)")) +
   geom_line(aes(y=(temperature*2), color="Temperature (°C)")) +
   scale_y_continuous(sec.axis = sec_axis(~./2, name = "Temperature(°C)")) +
-  scale_color_manual(labels = c ("Precipitation (daily avg.)","Temperature (daily avg.)"), values=c("#00BFC4", "#F8766D")) +
-  theme_minimal()
+  scale_color_manual(labels = c ("Precipitation (daily avg.)","Temperature (daily avg.)"), values=c("#619CFF", "#F8766D")) +
+  theme_minimal(base_size = 18)
 
 #*******************************************************************************
 weather <- pollination %>% 
