@@ -1,11 +1,15 @@
-##### FLOWERS
+source("RanunculusData.R")
 
+#### PREDICT PEAK FLOWER AND PEAK INSECT ####
+
+##### FLOWERS ####
+# fitler data
 dat.fl <- phenology %>% 
   filter(year == "2017") %>% 
   #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day))
 
-
+# function to find best model
 CompareModels.fl <- function(dat.fl){
   fit1 <- glm(flower.sum ~ doy + I(doy^2), data = dat.fl, family = "poisson")
   fit2 <- glm(flower.sum ~ doy + I(doy^2) + I(doy^3), data = dat.fl, family = "poisson")
@@ -17,12 +21,14 @@ CompareModels.fl <- function(dat.fl){
   return(res)
 }
 
+# run function
 dat.fl %>% 
   group_by(site, stage) %>%
   do(CompareModels.fl(.)) %>% 
   mutate(Diff = AIC1 - AIC2) %>% pn
 
 
+# Function to predict peak flower
 PredictPeakFlower <- function(dat.fl){
   fit2 <- glm(flower.sum ~ doy + I(doy^2) + I(doy^3), data = dat.fl, family = "poisson")
   new.dat.fl <- data.frame(doy = dat.fl$doy)
@@ -33,6 +39,7 @@ PredictPeakFlower <- function(dat.fl){
   return(res)
 }
 
+# Run function to predict peak flower
 pred.fl <- dat.fl %>%
   group_by(site, stage) %>%
   do(PredictPeakFlower(.))
@@ -64,14 +71,15 @@ pred.fl %>%
 #********************************************************************************************
 
 
-##### INSECTS
+##### INSECTS ####
+# filter data
 dat.pol <- pollination %>% 
   filter(year == "2017") %>% 
   #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day)) 
   #mutate(poll.sqm.trans = (poll.sqm - min(poll.sqm))/(max(poll.sqm) - min(poll.sqm)))
 
-
+# Function to find best model
 Compare.models.pol <- function(dat.pol){
     fit1 <- glm(fly ~ doy + I(doy^2), data = dat.pol, family = "poisson")
     fit2 <- glm(fly~ doy + I(doy^2) + I(doy^3), data = dat.pol, family = "poisson")
@@ -83,13 +91,14 @@ Compare.models.pol <- function(dat.pol){
   return(res)
 }
 
+# Run function
 dat.pol %>% 
   group_by(site, stage) %>%
   do(Compare.models.pol(.)) %>% 
   mutate(Diff = AIC1 - AIC2) %>% pn
 
 
-
+# Function to predict peak pollinator
 PredictPollinator <- function(dat.pol){
   fit2 <- glm(fly ~ doy + I(doy^2) + I(doy^3), data = dat.pol, family = "poisson")
   new.dat.pol <- data.frame(doy = dat.pol$doy)
@@ -100,6 +109,7 @@ PredictPollinator <- function(dat.pol){
   return(res)
 }
 
+# Run function to find peak pollinatior
 pred.poll <- dat.pol %>% 
   group_by(site, stage) %>%
   do(PredictPollinator(.))
@@ -112,11 +122,14 @@ PredPoll <- pred.poll %>%
 
 
 
-##### JOINING FLOWERS AND INSECTS
+##### JOINING PREDICTED VALUES FOR FLOWERS AND INSECTS ####
 
 AllPred <- PredPoll %>% 
+  ungroup() %>% 
   left_join(PredFl, by=c("stage"="stage", "site"="site")) %>% 
-  mutate(peak.diff = peak.fl-peak.poll, siteID = paste(stage, site))
+  mutate(peak.diff = peak.fl-peak.poll, siteID = paste(stage, site)) %>%  # calculate difference
+  mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>% 
+  mutate(siteID = factor(siteID))
 
 AllPred$siteID <- as.character(AllPred$siteID)
 AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))  
