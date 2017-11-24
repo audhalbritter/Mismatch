@@ -134,6 +134,3 @@ AllPred <- PredPoll %>%
 AllPred$siteID <- as.character(AllPred$siteID)
 AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))  
 
-# Comparing peaks (flowers and pollinators)
-
-summary(lm(peak.fl~peak.poll, AllPred))
