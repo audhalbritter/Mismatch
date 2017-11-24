@@ -108,14 +108,16 @@ sites <- sites %>%
 
 ########################################################################
 
-### BY SNOWMELT-DATE ###
+### SNOWMELT DATA ###
 
 #importing snowmelt-dataset and joining with peak-data
 library(readxl)
 Date_snowmelt <- read_excel("Data/2017/Date_snowmelt.xlsx")
 
 Date_snowmelt <- Date_snowmelt %>% 
-  mutate(doy = yday(Snowmelt_date))
+  mutate(doy = yday(Snowmelt_date)) %>% 
+  mutate(stage = as.factor(stage), site=as.factor(site)) %>% 
+  rename(siteID=site)
 
 ########################################################################
 
