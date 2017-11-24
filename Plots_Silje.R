@@ -1,5 +1,10 @@
 ##### PEAK DIFFERENCE PLOT #######################################
 
+peak_snowmelt <- peak.data %>% 
+  full_join(Date_snowmelt, by=c("stage"="stage", "siteID"="site")) %>% 
+  mutate(doy = yday(Snowmelt_date))
+
+
 ### BY SITE ###
 
 # Joining data and creating peak difference
@@ -18,17 +23,6 @@ ggplot(peak.data, aes(y = peak.diff, x = siteID)) +
   theme_minimal()
 
 
-### BY SNOWMELT-DATE ###
-
-#importing snowmelt-dataset and joining with peak-data
-library(readxl)
-Date_snowmelt <- read_excel("~/Mismatch/Data/2017/Date_snowmelt.xlsx")
-
-peak_snowmelt <- peak.data %>% 
-  full_join(Date_snowmelt, by=c("stage"="stage", "siteID"="site")) %>% 
-  mutate(doy = yday(Snowmelt_date))
-
-View(peak_snowmelt)
 
 # Making plot showing peak difference by date of snowmelt
 ggplot(peak_snowmelt, aes(y = peak.diff, x = doy)) +
@@ -63,19 +57,7 @@ AllPred %>%
   theme_minimal(base_size = 18)
 
 
-##### REPRODUCTIVE OUTPUT PLOT #####################################
 
-#importing biomass data
-library(readxl)
-Biomass <- read_excel("~/Mismatch/Data/2017/Biomass.xlsx")
-View(Biomass)
-
-### BY SITE ###
-Biomass %>% 
-  mutate(Stage = factor(Stage, levels = c("F", "E","M", "L")))
-
-Biomass$Stage <- as.character(Biomass$Stage)
-Biomass$Stage <- factor(Biomass$Stage, levels=c("F", "E", "M")) 
 
 stage_names <- c("F"="E", "E"="M", "M"="L")
 
