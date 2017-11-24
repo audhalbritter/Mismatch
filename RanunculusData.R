@@ -114,6 +114,18 @@ sites <- sites %>%
 library(readxl)
 Date_snowmelt <- read_excel("Data/2017/Date_snowmelt.xlsx")
 
+Date_snowmelt <- Date_snowmelt %>% 
+  mutate(doy = yday(Snowmelt_date))
+
+########################################################################
+
+##### WEATHER THROUGHOUT SEASON #####
+weather <- read_excel("Data/2017/Finse_weather.xlsx")
+
+Weather <- weather %>% 
+  mutate(precipitation = as.numeric(precipitation)) %>%
+  mutate(doy = yday(date))
+
 
 ########################################################################
 
