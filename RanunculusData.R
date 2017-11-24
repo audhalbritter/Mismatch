@@ -108,6 +108,15 @@ sites <- sites %>%
 
 ########################################################################
 
+### BY SNOWMELT-DATE ###
+
+#importing snowmelt-dataset and joining with peak-data
+library(readxl)
+Date_snowmelt <- read_excel("Data/2017/Date_snowmelt.xlsx")
+
+
+########################################################################
+
 
 ### JOIN 2016 and 2017 DATA
 ### PHENOLOGY
@@ -118,9 +127,6 @@ phenology <- pheno16 %>%
   group_by(day, stage, site, year) %>% 
   summarise(flower.sum = sum(flowering), flower.mean = mean(flowering)) %>% 
   mutate(fl.sqm = flower.mean*2)
-
-save(phenology, file = "Phenology.RData")
-
 
 
 ### POLLINATION
@@ -133,51 +139,15 @@ pollination <- pollination16 %>%
   mutate(weather = factor(weather, levels = c("sun", "sun_cloud","cloud_sun", "cloud"))) %>% 
   mutate(poll.sqm = fly/area)
 
-save(pollination, file = "Pollinaton.RData")
 
 
-# LOAD DATA
+# SAVE AND LOAD DATA
 ### INSTEAD OF USING ALL THE CODE ABOVE, YOU CAN JUST LOAD THE DATA
+#save(phenology, file = "Phenology.RData")
+#save(pollination, file = "Pollinaton.RData")
 
-load("Phenology.RData")
-load("Pollinaton.RData")
-
-
-
-### CALCULATE FIRST AND PEAK FLOWERING AND INSECT OBSERVATION
-
-peak.fl <- phenology %>% 
-  mutate(doy = yday(day)) %>% 
-  group_by(year, stage, site) %>%   # group by year, stage and site to calculate first and peak
-  summarize(first = first(doy), peak = doy[which.max(fl.sqm)]) %>% 
-  rename(peak.fl = peak)
-#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
-#mutate(minDoy = min(doy, na.rm = TRUE)) %>% # calculate min doy
-#group_by(minDoy, add = TRUE) %>% # add variable but remember the previous groups
-
-View(peak.fl)
-
-peak.pol <- pollination %>% 
-  select(poll.sqm, year, stage, site, date) %>% 
-  group_by(year, stage, site)%>% 
-  mutate(doy = yday(date)) %>% 
-  summarize(first = first(doy), peak = doy[which.max(poll.sqm)]) %>% 
-  rename(peak.pol = peak)
-
-View(peak.pol)
-
-### JOIN PHENOLOGY AND POLLINATION ####
-# Find closest phenology observation to each pollination observation
-pollination2 <- pollination %>% 
-  full_join(phenology, by = c("site", "stage"), suffix = c(".poll",".fl")) %>% 
-  select(-weather, -wind, -remark) %>% 
-  mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
-  mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
-  group_by(day.poll, stage, site) %>% 
-  slice(which.min(abs.diff.mult)) %>% 
-  mutate(flowering = ifelse(abs.diff > 3, NA, flowering)) %>% # could check how much different flowers are
-  mutate(tot.flowers = flowering*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
-  mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
+#load("Phenology.RData")
+#load("Pollinaton.RData")
 
 
 
@@ -208,151 +178,27 @@ pollen16 %>%
   mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
   mutate(plant = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")) %>% 
   select(-Plot, -Plant) %>% 
-  group_by(plant, site, stage) %>% 
-  ggplot(aes(x = plant, y = NumberOvule)) +
-  geom_boxplot() +
-  facet_wrap(~ stage)
+  group_by(plant, site, stage)
+  #ggplot(aes(x = plant, y = NumberOvule)) +
+  #geom_boxplot() +
+  #facet_wrap(~ stage)
 
-dd <- pollen %>% 
-  fill(Plot) %>% 
-  mutate(stage = factor(substring(Plot, 1,1))) %>% 
-  mutate(site = factor(substring(Plot, 2,3))) %>% 
-  mutate(plot = factor(substring(Plot, 4,4))) %>% 
-  mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
-  mutate(plant = ifelse(Plant %in% c("C1", "C2", "Control", "Pollinated")))
+#dd <- pollen %>% 
+  #fill(Plot) %>% 
+  #mutate(stage = factor(substring(Plot, 1,1))) %>% 
+  #mutate(site = factor(substring(Plot, 2,3))) %>% 
+  #mutate(plot = factor(substring(Plot, 4,4))) %>% 
+  #mutate(stage = factor(stage, levels = c("E", "M", "L"))) %>%
+  #mutate(plant = ifelse(Plant %in% c("C1", "C2", "Control", "Pollinated")))
 
 
 ### 2017
-pollen17 <- read_excel("Data/2017/Vekt_planter_fro.xlsx", col_names = TRUE)
 
-# loop to get Plot in all cells
-LoopPlot <- function(dat){
-  for (i in 2:nrow(dat)){
-    if(is.na(nchar(dat$Plot[i]))){
-      dat$Plot[i] <- dat$Plot[i-1]
-    }
-  }
-  return(dat)
-}
+#importing biomass data
+Biomass17 <- read_excel("Data/2017/Biomass.xlsx", col_types = c("text", "text", "text", "text", "text", "numeric", "numeric", "date", "text", "date", "text", "date", "text", "date", "text"))
 
-pollen17 <- LoopPlot(pollen17)
-
-pollen17 <- pollen17 %>% 
-  mutate(Stage = substring(Plot, 1,1), Subplot = substring(Plot, nchar(Plot), nchar(Plot)), Site = substring(Plot, 2, nchar(Plot)-1)) %>%
-  mutate(Stage = factor(Stage, levels = c("F", "E", "M")), Site = factor(Site)) %>% 
-  mutate(Treatment = plyr::mapvalues(Plant, c("C1", "C2", "HP1", "HP2"), c("Control", "Control", "Pollination", "Pollination")))
-  
-
-ggplot(pollen17, aes(x = Treatment, y = Biomass)) +
-  geom_boxplot() +
-  facet_grid( ~ Stage)
-
-ggplot(pollen17, aes(x = Treatment, y = ReproductiveOutput)) +
-  geom_boxplot() +
-  facet_grid( ~ Stage)
-
-
-
-### TO DO!!!
-# is 10 minutes data needed? to merge with phenology? there is only one phenolog data per day anyway. Should be merged with the closest day
-# import biomass and reproductive output data
-
-phenology %>% 
-  filter(year == 2017) %>% 
-  group_by(day, stage, site) %>% 
-  summarise(mean = mean(flowering)) %>% 
-  ggplot(aes(x = day, y = mean, color = stage)) +
-  geom_point() +
-  facet_wrap(~ site)
-
-pollination %>% 
-  #filter(stage == "F") %>% 
-  group_by(day, stage, site) %>% 
-  summarise(mean = mean(fly)) %>% 
-  ggplot(aes(x = day, y = mean, colour = stage)) +
-  geom_point() +
-  facet_wrap(~ site)
-
-
-#*****************************************************************************************
-
-
-
-# Mismatch: differnece in peak flowering - peak visit
-dat %>%
-  filter(stage != "L") %>% 
-  group_by(site, stage) %>% 
-  mutate(peak.flower = day[which.max(nrflower)], peak.fly = day[which.max(nrvisit)]) %>% 
-  mutate(diff = yday(peak.fly) - yday(peak.flower)) %>% 
-  ggplot() +
-  geom_point(aes(x = stage, y = diff, colour = stage)) +
-  geom_hline(yintercept = 0, color = "grey") +
-  labs(x = "Site", y = "Difference in days: peak flower - peak visit") +
-  facet_wrap(~ site)
-
-# Mid
-dat %>%
-  filter(stage == "M") %>% 
-  ggplot() +
-  geom_point(aes(x = day, y = nrflower), color = "red") +
-  geom_point(aes(x = day, y = nrvisit)) +
-  facet_wrap(~ site)
-
-# Flowering E and M
-pheno2 %>%
-  group_by(stage, date, site) %>%
-  summarise(n = n(), nrflower = sum(flowering)) %>% 
-  filter(stage != "L") %>% 
-  ggplot() +
-  geom_line(aes(x = date, y = nrflower, color = stage)) +
-  facet_wrap(~ site)
-
-# Polli E and M
-pollinator %>%
-  group_by(stage, day, site) %>%
-  summarise(n = n(), nrvisit = mean(fly)) %>% 
-  filter(stage != "L") %>% 
-  ggplot() +
-  geom_point(aes(x = day, y = nrvisit, color = stage)) +
-  facet_wrap(~ site)
-
-pollinator %>% 
-  group_by(stage, day) %>% 
-  summarise(n = n(), meanvisit = mean(fly), se = sd(fly)/sqrt(n)) %>% 
-  mutate(day = ymd(day)) %>% 
-  ggplot(aes(x = day, y = meanvisit, ymin = meanvisit - se, ymax = meanvisit + se)) + 
-  geom_point() + 
-  geom_errorbar() +
-  scale_x_date() +
-  facet_wrap(~ stage)
-
-
-
-hist(dd$NumberOvule)
-fit <- glm(NumberOvule ~ plant*stage, dd, family = "poisson")
-summary(fit)
-plot(fit) 
-
-
-
-
-
-### NUMBER OF OBSERVATIONS  
-pheno2 %>% 
-  filter(flowering > 0) %>% 
-  mutate(day = dmy(format(date, "%d.%b.%Y"))) %>%
-  group_by(stage, site, day) %>% 
-  summarise(flower = sum(flowering)) %>% 
-  summarise(n = n()) %>% 
-  spread(key = stage, value = n)
-
-
-pollinator %>% 
-  filter(fly > 0) %>% 
-  mutate(day = dmy(format(date, "%d.%b.%Y"))) %>%
-  group_by(stage, site, day) %>% 
-  summarise(flower = mean(fly)) %>% 
-  summarise(n = n()) %>% 
-  spread(key = stage, value = n)
-
+### BY SITE ###
+Biomass17 <- Biomass17 %>% 
+  rename(Date1 = `Date  1`) %>% ### TO DO!!!
+  mutate(Stage = factor(Stage, levels = c("F", "E", "M")))
 
