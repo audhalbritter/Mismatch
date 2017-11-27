@@ -138,14 +138,98 @@ Date_snowmelt %>%
 
 ##### OVERLAP VS. SITES ###########################################################
 
-AllPred %>%
+overlap <- AllPred %>%
   mutate(first = ifelse(first.poll > first.fl, first.poll, first.fl)) %>%
   mutate(last = ifelse(last.poll < last.fl, last.poll, last.fl)) %>%
-  mutate(overlap = last - first) %>% 
-  ggplot(aes(x = siteID, y = overlap, color = stage)) +
+  mutate(overlap = last - first)
+ggplot(overlap, aes(x = siteID, y = overlap, color = stage)) +
   geom_point() + labs(x = "Site", y = "Overlap in occurance (no. days)") +
   theme_minimal()
 
 
 
+##### SUM TEMP. AND SUM PRECIPITATION #############################################
 
+## TEMPERATURE
+# Comparing to mismatch
+sumTP %>% 
+  mutate(peak.diff=peak.fl-peak.poll) %>% 
+  ggplot(aes(x = abs(peak.diff), y = sumT.fl, color = stage)) +
+  geom_point() +  #more correct to not use abs(peak.diff) here?
+  labs(x= "Degree of mismatch (no. days)", y = "Sum temperature (snowmelt to peak flowering)") +
+  theme_minimal()
+
+sumTP %>% 
+  mutate(peak.diff=peak.fl-peak.poll) %>% 
+  ggplot(aes(x = peak.diff, y = sumT.poll, color = stage)) +
+  geom_point() + 
+  labs(x= "Degree of mismatch (no. days)", y = "Sum temperature (snowmelt to peak pollinator)") +
+  theme_minimal()
+
+# Compare to overlap
+overlap %>% 
+  select(overlap) %>% 
+  left_join(sumTP, by=c("stage")) %>% 
+  ggplot(aes(x = overlap, y = sumT.fl, color = stage)) +
+  geom_point()
+
+overlap %>% 
+  select(overlap) %>% 
+  left_join(sumTP, by=c("stage")) %>% 
+  ggplot(aes(x = overlap, y = sumT.poll, color = stage)) +
+  geom_point()
+
+# Comapring to reproductive output
+Biomass17 %>% 
+  select(Stage, Site, Seed_mass) %>% 
+  left_join(sumTP, by = c("Stage"="stage", "Site"="siteID")) %>% 
+  ggplot(aes(x = sumT.fl, y = Seed_mass, color = Stage))+
+  geom_point()
+
+Biomass17 %>% 
+  select(Stage, Site, Seed_mass) %>% 
+  left_join(sumTP, by = c("Stage"="stage", "Site"="siteID")) %>% 
+  ggplot(aes(x = sumT.poll, y = Seed_mass, color = Stage))+
+  geom_point()
+
+## PRECIPITATION
+# Comparing to mismatch
+sumTP %>% 
+  mutate(peak.diff=peak.fl-peak.poll) %>% 
+  ggplot(aes(x = peak.diff, y = sumP.fl, color = stage)) +
+  geom_point() + #more correct to not use abs(peak.diff) here?
+  labs(x= "Degree of mismatch (no. days)", y = "Sum precipitation (snowmelt to peak flowering)") +
+  theme_minimal()
+
+sumTP %>% 
+  mutate(peak.diff=peak.fl-peak.poll) %>% 
+  ggplot(aes(x = peak.diff, y = sumP.poll, color = stage)) +
+  geom_point() + 
+  labs(x= "Degree of mismatch (no. days)", y = "Sum precipitation (snowmelt to peak pollinator)") +
+  theme_minimal()
+
+# Compare to overlap
+overlap %>% 
+  select(overlap) %>% 
+  left_join(sumTP, by=c("stage")) %>% 
+  ggplot(aes(x = overlap, y = sumP.fl, color = stage)) +
+  geom_point()
+
+overlap %>% 
+  select(overlap) %>% 
+  left_join(sumTP, by=c("stage")) %>% 
+  ggplot(aes(x = overlap, y = sumP.poll, color = stage)) +
+  geom_point()
+
+# Comparing to reproductive output
+Biomass17 %>% 
+  select(Stage, Site, Seed_mass) %>% 
+  left_join(sumTP, by = c("Stage"="stage", "Site"="siteID")) %>% 
+  ggplot(aes(x = sumP.fl, y = Seed_mass, color = Stage))+
+  geom_point()
+
+Biomass17 %>% 
+  select(Stage, Site, Seed_mass) %>% 
+  left_join(sumTP, by = c("Stage"="stage", "Site"="siteID")) %>% 
+  ggplot(aes(x = sumP.poll, y = Seed_mass, color = Stage))+
+  geom_point()
