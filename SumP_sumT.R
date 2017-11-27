@@ -1,7 +1,7 @@
 
 
 dat <- AllPred %>% 
-  left_join(Date_snowmelt, by = c("stage", "siteID" = "site")) %>% 
+  left_join(Date_snowmelt, by = c("stage", "siteID")) %>% 
   select(-Snowmelt_date, -first.poll, -last.poll, -first.fl, -last.fl, -peak.diff) %>% 
   rename(SM = doy)
 
