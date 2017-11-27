@@ -7,7 +7,7 @@ dat <- AllPred %>%
 
 
 
-dat %>% 
+sumTP <- dat %>% 
   rowwise() %>% 
   do({
     dd <- .
