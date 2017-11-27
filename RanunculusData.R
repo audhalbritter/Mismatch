@@ -117,7 +117,8 @@ Date_snowmelt <- read_excel("Data/2017/Date_snowmelt.xlsx")
 Date_snowmelt <- Date_snowmelt %>% 
   mutate(doy = yday(Snowmelt_date)) %>% 
   mutate(stage = as.factor(stage), site=as.factor(site)) %>% 
-  rename(siteID=site)
+  rename(siteID=site) %>% 
+  mutate(doy = yday(Snowmelt_date))
 
 ########################################################################
 
@@ -213,6 +214,6 @@ Biomass17 <- read_excel("Data/2017/Biomass.xlsx", col_types = c("text", "text", 
 
 ### BY SITE ###
 Biomass17 <- Biomass17 %>% 
-  rename(Date1 = `Date  1`) %>% ### TO DO!!!
+  rename(Date1 = `Date  1`, Date2 = `Date 2`, Date3 = `Date 3`, Name1 = `Name 1`, Name2 = `Name 2`, Name3 = `Name 3`) %>%
   mutate(Stage = factor(Stage, levels = c("F", "E", "M")))
 
