@@ -5,7 +5,7 @@ source("RanunculusData.R")
 ##### FLOWERS ####
 # fitler data
 dat.fl <- phenology %>% 
-  filter(year == "2017") %>% 
+  #filter(year == "2017") %>% 
   #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day))
 
@@ -23,9 +23,10 @@ CompareModels.fl <- function(dat.fl){
 
 # run function
 dat.fl %>% 
-  group_by(site, stage) %>%
+  group_by(year, stage, site) %>%
   do(CompareModels.fl(.)) %>% 
   mutate(Diff = AIC1 - AIC2) %>% pn
+# if Diff is positve, model 2 is better
 
 
 # Function to predict peak flower
@@ -41,12 +42,12 @@ PredictPeakFlower <- function(dat.fl){
 
 # Run function to predict peak flower
 pred.fl <- dat.fl %>%
-  group_by(site, stage) %>%
+  group_by(year, stage, site) %>%
   do(PredictPeakFlower(.))
 
 # Calculate peak, first and end
 PredFl <- pred.fl %>%
-  group_by(site, stage) %>%
+  group_by(year, stage, site) %>%
   summarize(first = first(doy), peak = doy[which.max(pred)], last = last(doy)) %>% 
   rename(first.fl = first, peak.fl = peak, last.fl = last)
 
@@ -74,7 +75,7 @@ pred.fl %>%
 ##### INSECTS ####
 # filter data
 dat.pol <- pollination %>% 
-  filter(year == "2017") %>% 
+  #filter(year == "2017") %>% 
   #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day)) 
   #mutate(poll.sqm.trans = (poll.sqm - min(poll.sqm))/(max(poll.sqm) - min(poll.sqm)))
@@ -93,10 +94,10 @@ Compare.models.pol <- function(dat.pol){
 
 # Run function
 dat.pol %>% 
-  group_by(site, stage) %>%
+  group_by(year, stage, site) %>%
   do(Compare.models.pol(.)) %>% 
   mutate(Diff = AIC1 - AIC2) %>% pn
-
+# if Diff is positive, model 2 is better
 
 # Function to predict peak pollinator
 PredictPollinator <- function(dat.pol){
@@ -111,12 +112,12 @@ PredictPollinator <- function(dat.pol){
 
 # Run function to find peak pollinatior
 pred.poll <- dat.pol %>% 
-  group_by(site, stage) %>%
+  group_by(year, stage, site) %>%
   do(PredictPollinator(.))
 
 # Calculate peak, first and end
 PredPoll <- pred.poll %>%
-  group_by(stage, site) %>%
+  group_by(year, stage, site) %>%
   summarize(first = first(doy), peak = doy[which.max(pred)], last = last(doy)) %>% 
   rename(first.poll = first, peak.poll = peak, last.poll = last)
 
