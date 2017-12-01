@@ -20,7 +20,7 @@ fl <- dat.fl %>%
 
 all <- dat.pol %>% 
   select(year, doy, stage, site, fly) %>% 
-  mutate(variable = "pollinators", fly = 10*fly) %>% 
+  mutate(variable = "pollinators", fly = ifelse(year == 2017, 10*fly, fly)) %>% 
   rename(value = fly) %>% 
   rbind(fl) %>% 
   left_join(pred, by = c("site", "stage", "doy", "variable", "year"))
@@ -32,6 +32,7 @@ combined <- function(dat){dat %>%
     geom_point() +
     geom_line(aes(y = pred, color = variable)) +
     labs(x = "Day of the year", y = "No. flowers") +
+    scale_color_manual(values = c("yellow", "green")) +
     scale_y_continuous(sec.axis= sec_axis(~./10, name="Pollinator visitation rate")) +
     ggtitle(unique(paste(dat$year, dat$stage, dat$site, sep = " "))) +
     theme_minimal()
