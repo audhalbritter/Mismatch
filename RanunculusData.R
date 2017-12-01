@@ -116,7 +116,8 @@ snomelt16 <- data_frame(year = c(rep(2016, 3)),
                            Snowmelt_date = c("17.06.2016", "04.07.2016", "15.07.2016"))
 
 snowmelt16 <- snomelt16 %>% 
-  mutate(Snowmelt_date = dmy(Snowmelt_date))
+  mutate(Snowmelt_date = dmy(Snowmelt_date)) %>% 
+  mutate(doy = yday(Snowmelt_date))
 
 #2017
 #importing snowmelt-dataset and joining with peak-data
@@ -181,7 +182,7 @@ pollination <- pollination16 %>%
 ### READ IN HAND-POLLINATION, BIOMASS AND REPRODUCTIVE OUTPUT ###
 
 ### 2016
-biomass16 <- read_excel("Data/2016/17-12-01_BiomassAndSeed.xlsx", col_types = c("text", "text", "numeric", "numeric", "numeric", "numeric", "text", "date", "text", "date", "text", "date", "text", "date", "text"))
+biomass16 <- read_excel("Data/2016/17-12-01_BiomassAndSeed.xlsx", col_types = c("text", "text", "text", "text", "numeric", "numeric", "text", "date", "text", "date", "text", "date", "text", "date", "text"))
 head(biomass16)
 ### SOME PROBLEM WITH 2 PLANTS WHERE THERE ARE 2 PLANTS!!!
 
@@ -189,10 +190,10 @@ head(biomass16)
 biomass16 <- biomass16 %>% 
   fill(Plot) %>% # fills empty plot names with value above
   rename(Treatment = Plant, Biomass = `Vekt biomasse`, Seed_mass = `Vekt frø`, Seed_number = `Antall frø`, Ovule_number = `Antall ovuler`, Date1 = `Dato pollinert 1`, Date2 = `Dato pollinert 2`, Date3 = `Dato pollinert 3`, Name1 = Hvem1, Name2 = Hvem2, Name3 = Hvem3, Collected = `Dato samlet frø`, NameCollected = Hvem4) %>%
+  mutate(Biomass = as.numeric(Biomass), Seed_mass = as.numeric(Seed_mass)) %>% 
   mutate(Stage = factor(substring(Plot, 1,1))) %>% 
   mutate(Site = factor(substring(Plot, 2,3))) %>% 
   mutate(Block = factor(substring(Plot, 4,4))) %>% 
-  mutate(Stage = factor(Stage, levels = c("E", "M", "L"))) %>%
   mutate(Treatment = ifelse(Treatment %in% c("C1", "C2"), "Control", "Pollinated")) %>% 
   select(-Plot) %>% 
   mutate(Year = 2016)
@@ -205,9 +206,12 @@ Biomass17 <- read_excel("Data/2017/Biomass.xlsx", col_types = c("text", "text", 
 ### BY SITE ###
 Biomass17 <- Biomass17 %>% 
   rename(Treatment = Plant_type, Date1 = `Date  1`, Date2 = `Date 2`, Date3 = `Date 3`, Name1 = `Name 1`, Name2 = `Name 2`, Name3 = `Name 3`) %>%
-  mutate(Stage = factor(Stage, levels = c("F", "E", "M"))) %>% 
+  mutate(Treatment = ifelse(Treatment %in% c("C"), "Control", "Pollinated")) %>% 
   mutate(Year = 2017)
 
 Biomass <- biomass16 %>% 
-  bind_rows(Biomass17)
+  bind_rows(Biomass17) %>% 
+  filter(!is.na(Stage)) %>% 
+  mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")))
+
 
