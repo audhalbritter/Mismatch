@@ -110,6 +110,15 @@ sites <- sites %>%
 
 ### SNOWMELT DATA ###
 
+#2016
+snomelt16 <- data_frame(year = c(rep(2016, 3)),
+                           stage = c("E", "M", "L"),
+                           Snowmelt_date = c("17.06.2016", "04.07.2016", "15.07.2016"))
+
+snowmelt16 <- snomelt16 %>% 
+  mutate(Snowmelt_date = dmy(Snowmelt_date))
+
+#2017
 #importing snowmelt-dataset and joining with peak-data
 Date_snowmelt <- read_excel("Data/2017/Date_snowmelt.xlsx")
 
