@@ -57,6 +57,7 @@ PredFl <- pred.fl %>%
 plot(dat.fl$doy, dat.fl$flower.sum)
 with(new.dat.fl, lines(x = doy, y = pred), col = "red")
 
+fit1 <- glm(flower.sum ~ doy + I(doy^2), data = dat.fl, family = "poisson")
 fit2 <- glm(flower.sum ~ doy + I(doy^2) + I(doy^3), data = dat.fl, family = "poisson")
 new.dat.fl <- data.frame(doy = dat.fl$doy)
 new.dat.fl$pred <- exp(predict(fit2, new.dat.fl))
@@ -127,7 +128,7 @@ PredPoll <- pred.poll %>%
 
 AllPred <- PredPoll %>% 
   ungroup() %>% 
-  left_join(PredFl, by=c("stage"="stage", "site"="site")) %>% 
+  left_join(PredFl, by=c("stage"="stage", "site"="site", "year")) %>% 
   mutate(peak.diff = peak.fl-peak.poll, siteID = paste(stage, site)) %>%  # calculate difference
   mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>% 
   mutate(siteID = factor(siteID))
