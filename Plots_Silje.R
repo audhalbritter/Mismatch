@@ -11,17 +11,16 @@ AllPred %>%
   theme_minimal()
 
 
-## BY SNOWMELT mutate(stage = factor(stage, levels = c("F", "E","M"))) %>% 
-
+## BY SNOWMELT mutate
 
 AllPred %>% 
   select(stage, siteID, peak.diff) %>%
   left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>%
   mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>% 
-  ggplot(aes(y=(peak.diff), x=Snowmelt_date, color = stage)) +
-  geom_point() +
-  geom_smooth(method="lm", aes(group = 1)) +
-  labs(y="Mismatch (no. days)", x="Date of snowmelt") +
+  ggplot(aes(y=(abs(peak.diff)), x=doy, color = stage)) +
+  geom_jitter() +
+  #geom_smooth(method="lm", aes(group = 1)) +
+  labs(y="Mismatch (no. days)", x="Day of snowmelt") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   theme_light(base_size = 18)
   
@@ -249,7 +248,7 @@ sumTP %>%
   labs(y = "Sum temperature(°C)", x = "Days from snowmelt to peak flowering") +
   geom_jitter() +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
-  theme_light()
+  theme_light(base_size = 16)
 
 sumTP %>% 
   mutate(daysSM = peak.fl-SM) %>%
