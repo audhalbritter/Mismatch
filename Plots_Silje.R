@@ -11,17 +11,19 @@ AllPred %>%
   theme_minimal()
 
 
-## BY SNOWMELT
+## BY SNOWMELT mutate(stage = factor(stage, levels = c("F", "E","M"))) %>% 
+
+
 AllPred %>% 
   select(stage, siteID, peak.diff) %>%
-  left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>% 
-  mutate(stage = factor(stage, levels = c("F", "E","M"))) %>% 
-  ggplot(MismatchSnow, aes(y=abs(peak.diff), x=Snowmelt_date, color=stage)) +
-  #geom_point() +
-  geom_jitter() +
-  labs(y="Mismatch (no. days)", x="Date of snowmelt", color="Stage") +
+  left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>%
+  mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>% 
+  ggplot(aes(y=(peak.diff), x=Snowmelt_date, color = stage)) +
+  geom_point() +
+  geom_smooth(method="lm", aes(group = 1)) +
+  labs(y="Mismatch (no. days)", x="Date of snowmelt") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
-  theme_minimal(base_size = 18)
+  theme_light(base_size = 18)
   
 
 ## PEAK VS. PEAK
@@ -63,12 +65,13 @@ Biomass %>%
 
 ## OUTPUT VS. MISMATCH (PEAK DIFF)
 
-Reprod <- Biomass %>% 
+Biomass17 %>% 
   left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
-  select(Stage, Site, Plant_type, Seed_mass, peak.diff) %>% 
-  mutate(Stage = factor(Stage, levels = c("F", "E","M"))) %>% 
-  ggplot(aes(y=Seed_mass, x=abs(peak.diff), color=Stage)) +
+  filter(Plant_type == "C") %>%
+  select(Stage, Site, Plant_type, Seed_mass, peak.diff) %>%
+  ggplot(aes(y=Seed_mass, x=abs(peak.diff))) +
   geom_jitter() +
+  geom_abline(slope = 0.12155, intercept = -1764231, color = "blue") +
   labs(y="Reproductive output (g)", x="Mismatch") +
   scale_color_manual(labels = c("E", "M", "L"), values = c("#F8766D", "#00BA38", "#619CFF")) +
   theme_minimal(base_size = 18)
@@ -154,7 +157,7 @@ ggplot(overlap, aes(x = siteID, y = overlap, color = stage)) +
 # Comparing to mismatch
 sumTP %>% 
   mutate(peak.diff=peak.fl-peak.poll) %>% 
-  ggplot(aes(x = abs(peak.diff), y = sumT.fl, color = stage)) +
+  ggplot(aes(y = peak.diff, x = sumT.fl, color = stage)) +
   geom_point() +  #more correct to not use abs(peak.diff) here?
   labs(x= "Degree of mismatch (no. days)", y = "Sum temperature (snowmelt to peak flowering)") +
   theme_minimal()
@@ -233,3 +236,46 @@ Biomass17 %>%
   left_join(sumTP, by = c("Stage"="stage", "Site"="siteID")) %>% 
   ggplot(aes(x = sumP.poll, y = Seed_mass, color = Stage))+
   geom_point()
+
+
+
+##### SUM TEMP./PRECIPITATION AND DAYS FROM SM TO PEAK #####################
+
+# Sum temp. and sum precipitation plotted against days from SM to peak flower
+sumTP %>% 
+  mutate(daysSM = peak.fl-SM) %>% 
+  mutate(stage = factor(stage, levels = c("F", "E","M", "L"))) %>% 
+  ggplot(aes(x = daysSM, y = sumT.fl, color = stage)) +
+  labs(y = "Sum temperature(°C)", x = "Days from snowmelt to peak flowering") +
+  geom_jitter() +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  theme_light()
+
+sumTP %>% 
+  mutate(daysSM = peak.fl-SM) %>%
+  mutate(stage = factor(stage, levels = c("F", "E","M"))) %>% 
+  ggplot(aes(x = daysSM, y = sumP.fl, color = stage)) +
+  geom_jitter() +
+  labs(y = "Sum precipitation", x = "Days from snowmelt to peak flowering") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  theme_light()
+
+# Sum temp. and sum precipitation plotted against days from SM to peak pollinator
+sumTP %>% 
+  mutate(daysSM = peak.poll-SM) %>% 
+  mutate(stage = factor (stage, levels = c("F", "E","M", "L"))) %>% 
+  ggplot(aes(x = daysSM, y = sumT.poll, color = stage)) +
+  labs(y = "Sum temperature(°C)", x = "Days from snowmelt to peak pollination") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  geom_jitter() +
+  theme_light()
+
+sumTP %>% 
+  mutate(daysSM = peak.poll-SM) %>% 
+  mutate(stage = factor(stage, levels = c("F", "E","M", "L"))) %>% 
+  ggplot(aes(x = daysSM, y = sumP.poll, color = stage)) +
+  geom_jitter() +
+  labs(y = "Sum precipitation", x = "Days from snowmelt to peak pollination") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  theme_light()
+
