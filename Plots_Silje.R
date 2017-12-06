@@ -278,3 +278,8 @@ sumTP %>%
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   theme_light()
 
+
+##### SUM TEMPERATURE AND NO. FLOWERS THROUGHOUT SEASON ###################
+k <- Weather %>%
+  #mutate(Temperature = temperature>0, ifelse(temperature<0=0))%>% 
+  mutate(temp.sum = cumsum(temperature, if_else(temperature<0, 0, temperature)))
