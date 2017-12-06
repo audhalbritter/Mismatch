@@ -156,3 +156,43 @@ pdf(file = "Maps2017.pdf")
 Maps2017$pheno.maps
 dev.off()
 
+
+
+##### PLOTTING POLLINATION RATE BY TIME (PR. PLOT) ########################
+pollination %>%
+  mutate(day.poll=yday(date)) %>% 
+  left_join(phenology, by = c("day", "year", "stage", "site")) %>%
+  rename(day.fl = date) %>% 
+  mutate(poll.rate = fly/flower.sum) %>% 
+  mutate(doy = yday(date)) %>%
+  select(stage, site, doy, year, poll.rate, flower.sum) %>%
+  mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
+  mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
+  group_by(day.poll, stage, site) %>% 
+  slice(which.min(abs.diff.mult)) %>% 
+  mutate(flower.sum = ifelse(abs.diff > 3, NA, flower.sum)) %>% 
+  filter(year == "2017", stage == "F", site == "02") %>% 
+  ggplot(aes(x=doy, y=poll.rate)) +
+  geom_point() +
+
+PollRate <- pollination %>% 
+  left_join(phenology, by = c("day", "year", "stage", "site")) %>% 
+  mutate(poll.rate = fly/flower.sum) %>% 
+  mutate(doy = yday(date)) %>%
+  select(stage, site, doy, year, poll.rate, flower.sum)
+
+PollinationRateMap <- function(dat1){
+  ggplot(dat1, (aes(x=doy, y=poll.rate))) +
+  geom_point() +
+  geom_smooth()
+}
+PollinationRateMap
+
+PollinationRateCurves <- PollRate %>% 
+  #filter(year == "2017") %>% 
+  group_by(year, site, stage) %>%
+  do(pollrate.curves = PollinationRateMap(.))
+
+pdf(file = "PollinationRateCurves.pdf")
+PollinationRateCurves$pollrate.curves
+dev.off()
