@@ -159,40 +159,39 @@ dev.off()
 
 
 ##### PLOTTING POLLINATION RATE BY TIME (PR. PLOT) ########################
-pollination %>%
-  mutate(day.poll=yday(date)) %>% 
-  left_join(phenology, by = c("day", "year", "stage", "site")) %>%
-  rename(day.fl = date) %>% 
-  mutate(poll.rate = fly/flower.sum) %>% 
-  mutate(doy = yday(date)) %>%
-  select(stage, site, doy, year, poll.rate, flower.sum) %>%
-  mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
-  mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
-  group_by(day.poll, stage, site) %>% 
-  slice(which.min(abs.diff.mult)) %>% 
-  mutate(flower.sum = ifelse(abs.diff > 3, NA, flower.sum)) %>% 
-  filter(year == "2017", stage == "F", site == "02") %>% 
-  ggplot(aes(x=doy, y=poll.rate)) +
-  geom_point() +
 
-PollRate <- pollination %>% 
-  left_join(phenology, by = c("day", "year", "stage", "site")) %>% 
-  mutate(poll.rate = fly/flower.sum) %>% 
-  mutate(doy = yday(date)) %>%
-  select(stage, site, doy, year, poll.rate, flower.sum)
-
-PollinationRateMap <- function(dat1){
-  ggplot(dat1, (aes(x=doy, y=poll.rate))) +
+pollination2 %>%
+  filter(year.poll == 2017, stage == "F", site == "02") %>%
+  mutate(std.fly = std.fly*100000) %>% 
+  ggplot(aes(x=day.poll, y=std.fly, color="pollinators")) +
   geom_point() +
-  geom_smooth()
+  labs(x="date", y="sum of flowers") +
+  geom_line(aes(y = tot.flowers, color = "flowers"), size=1) +
+  scale_y_continuous(sec.axis = sec_axis(~./100000, name = "pollinator visitation rate")) +
+  scale_color_manual(labels = c("flowers", "pollinators"), values = c("#FFCC00", "#33CC00")) +
+  theme_minimal()
+
+PollRate <- pollination2 %>%
+  filter(year.poll == 2017) %>%
+  mutate(std.fly = std.fly*100000) 
+
+PollinationRateMap <- function(dat){
+    ggplot(aes(x=day.poll, y=std.fly, color="pollinators")) +
+    geom_point() +
+    labs(x="date", y="sum of flowers") +
+    geom_line(aes(y = tot.flowers, color = "flowers"), size=1) +
+    scale_y_continuous(sec.axis = sec_axis(~./100000, name = "pollinator visitation rate")) +
+    scale_color_manual(labels = c("flowers", "pollinators"), values = c("#FFCC00", "#33CC00")) +
+    theme_minimal() +
+    ggtitle(unique(paste(dat$stage, dat$site, sep = " ")))
 }
 PollinationRateMap
 
-PollinationRateCurves <- PollRate %>% 
-  #filter(year == "2017") %>% 
-  group_by(year, site, stage) %>%
+PollinationRateCurves <- PollRate %>%
+  group_by(site, stage) %>%
   do(pollrate.curves = PollinationRateMap(.))
 
 pdf(file = "PollinationRateCurves.pdf")
 PollinationRateCurves$pollrate.curves
 dev.off()
+
