@@ -29,7 +29,7 @@ pollination2 <- pollination %>%
   mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
   group_by(day.poll, stage, site) %>% 
   slice(which.min(abs.diff.mult)) %>% 
-  mutate(flowering = ifelse(abs.diff > 3, NA, flowering)) %>% # could check how much different flowers are
-  mutate(tot.flowers = flowering*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
+  mutate(flowering = ifelse(abs.diff > 3, NA, flower.sum)) %>% # could check how much different flowers are
+  mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
 
