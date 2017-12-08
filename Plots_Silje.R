@@ -280,6 +280,31 @@ sumTP %>%
 
 
 ##### SUM TEMPERATURE AND NO. FLOWERS THROUGHOUT SEASON ###################
-k <- Weather %>%
-  #mutate(Temperature = temperature>0, ifelse(temperature<0=0))%>% 
-  mutate(temp.sum = cumsum(temperature, if_else(temperature<0, 0, temperature)))
+sumT <- Weather %>%
+  mutate(temperature = ifelse(temperature<0, 0, temperature)) %>% 
+  mutate(temp.sum = cumsum(temperature))
+
+pollination2 %>% 
+  mutate(doy = yday(date)) %>%
+  filter(year.fl == 2017) %>% 
+  left_join(sumT, by = c("doy")) %>% 
+  ggplot(aes(x = temp.sum, y = flower.sum)) +
+  geom_point()
+
+
+
+##### POLLINATOR VISITATION RATE #########################################################
+
+pollination2 %>% 
+  mutate(siteID = as.factor(paste(stage, site, sep = " "))) %>%
+  filter(year.poll == 2017) %>%
+  left_join(Date_snowmelt, by = c("siteID", "stage")) %>%
+  ggplot(aes(x=date, y=std.fly, color = Snowmelt_date)) +
+  geom_point()
+
+pollination2 %>%
+  filter(year.poll==2017) %>%
+  mutate(doy=yday(date)) %>% 
+  left_join(Weather, by=c("doy")) %>% 
+  ggplot(aes(x=temperature, y=std.fly)) +
+  geom_point()
