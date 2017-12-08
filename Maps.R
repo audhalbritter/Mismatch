@@ -176,7 +176,7 @@ PollRate <- pollination2 %>%
   mutate(std.fly = std.fly*100000) 
 
 PollinationRateMap <- function(dat){
-    ggplot(aes(x=day.poll, y=std.fly, color="pollinators")) +
+    ggplot(dat, aes(x=day.poll, y=std.fly, color="pollinators")) +
     geom_point() +
     labs(x="date", y="sum of flowers") +
     geom_line(aes(y = tot.flowers, color = "flowers"), size=1) +
