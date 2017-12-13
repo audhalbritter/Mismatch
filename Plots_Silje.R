@@ -299,8 +299,13 @@ pollination2 %>%
   mutate(siteID = as.factor(paste(stage, site, sep = " "))) %>%
   filter(year.poll == 2017) %>%
   left_join(Date_snowmelt, by = c("siteID", "stage")) %>%
+  ungroup() %>%
+  mutate(stage = factor(stage)) %>% 
+  #filter(siteID == "F 06") %>% 
   ggplot(aes(x=date, y=std.fly, color = Snowmelt_date)) +
-  geom_point()
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(site ~ stage)
 
 pollination2 %>%
   filter(year.poll==2017) %>%
