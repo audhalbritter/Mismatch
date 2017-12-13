@@ -40,3 +40,17 @@ AIC(fitA, fitB, fitC)
 
 summary(fitA)
 anova(fitA)
+
+
+##### POLLINATION VISITATION RATE ##################################################
+rate <- pollination2 %>% 
+  filter(std.fly != "Inf") %>% 
+  mutate(siteID = as.factor(paste(stage, site, sep = " "))) %>%
+  filter(year.poll == 2017) %>%
+  left_join(Date_snowmelt, by = c("siteID", "stage")) %>%
+  ungroup() %>%
+  mutate(stage = factor(stage), doy = yday(date))
+
+summary(lm(std.fly ~ doy, rate))
+
+summary(lm(std.fly ~ doy + Snowmelt_date, rate))
