@@ -172,7 +172,7 @@ pollination2 %>%
   theme_minimal()
 
 PollRate <- pollination2 %>%
-  filter(year.poll == 2017) %>%
+#  filter(year.poll == 2017) %>%
   mutate(std.fly = std.fly*100000) 
 
 PollinationRateMap <- function(dat){
