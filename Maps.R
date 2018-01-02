@@ -23,7 +23,7 @@ all <- dat.pol %>%
   mutate(variable = "pollinators", fly = ifelse(year == 2017, 10*fly, fly)) %>% 
   rename(value = fly) %>% 
   rbind(fl) %>% 
-  left_join(pred, by = c("site", "stage", "doy", "variable", "year"))
+  left_join(pred, by = c("site", "stage", "doy", "variable"))
 
 
 # Function to plot points and curves for predicted values and data
@@ -45,6 +45,18 @@ ComboCurves <- all %>%
 pdf(file = "ComboCurves.pdf")
 ComboCurves$combo.curves
 dev.off()
+
+
+# Making single plots
+all %>%
+  filter(site == 01, stage == "E") %>% 
+  ggplot(aes(x = doy, y = value, color = variable)) +
+  geom_point() +
+  geom_line(aes(y = pred, color = variable)) +
+  labs(x = "Day of the year", y = "No. flowers") +
+  scale_color_manual(values = c("yellow", "green")) +
+  scale_y_continuous(sec.axis= sec_axis(~./10, name="Pollinator visitation rate")) +
+  theme_minimal()
 
 #############################################################################################
 
