@@ -11,8 +11,7 @@ AllPred %>%
   theme_minimal()
 
 
-## BY SNOWMELT mutate
-
+## BY SNOWMELT
 AllPred %>% 
   select(stage, siteID, peak.diff) %>%
   left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>%
@@ -26,14 +25,17 @@ AllPred %>%
   
 
 ## PEAK VS. PEAK
-AllPred %>%
-  ggplot(aes(x = peak.poll, y = peak.fl, color = stage)) +
-  geom_point() + labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Stage") +
+SM <- AllPred %>% 
+  select(stage, siteID, peak.poll, peak.fl) %>%
+  left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>%
+  mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>%
+  ggplot(aes(x = peak.poll, y = peak.fl)) +
+  geom_point(aes(color = factor(doy))) +
+  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
-  geom_abline(slope = 0.6221, intercept = 75.6327, color = "blue") +
+  geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
   geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
   theme_minimal(base_size = 18)
-
 
 
 #### REPRODUCTIVE OUTPUT ##########################################################
@@ -41,12 +43,12 @@ AllPred %>%
 ## POLLEN LIMITATION, BY SITE
 stage_names <- c("F"="E", "E"="M", "M"="L")
 
-ggplot(Biomass, aes(y=Seed_mass, x=Plant_type, fill=as.factor(Plant_type))) +
+ggplot(Biomass, aes(y=Seed_mass, x=Plant_type))+ #, fill=as.factor(Plant_type))) 
   geom_boxplot() +
   facet_grid(~Stage, labeller = as_labeller(stage_names)) + 
-  theme_minimal(base_size = 18) + #outliers were re-weighed: they are correct
-  labs(y="Reproductive output (g)", x="Treatment", fill="Treatment")+
-  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)"), values = c("#F8766D", "#00BA38"))
+  theme_light(base_size = 16) + #outliers were re-weighed: they are correct
+  labs(y="Reproductive output (g)", x="Treatment", fill="Treatment") +
+  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
 
 
 ## BY SNOWMELT DATE
