@@ -1,11 +1,24 @@
 source("RanunculusData.R")
 
 ##### PEAK FLOWER/ PEAK POLLINATORS ################################################
-AllPred %>% 
-  select(stage, siteID, peak.fl, peak.poll)
-
 summary(lm(peak.fl~peak.poll, AllPred))
 anova(lm(peak.fl~peak.poll, AllPred))
+
+
+##### MISMATCH ~ STAGE #############################################################
+# 2016
+stage_mismatch16 <- AllPred %>% 
+  filter(year == 2016) %>% 
+  select(year, stage, siteID, peak.diff)
+  
+summary(lm(peak.diff ~ stage, stage_mismatch16))
+
+# 2017
+stage_mismatch17 <- AllPred %>% 
+  filter(year == 2017) %>% 
+  select(year, stage, siteID, peak.diff)
+
+summary(lm(peak.diff ~ stage, stage_mismatch17))
 
 ##### MISMATCH ~ DAY OF SNOWMELT ###################################################
 snowmelt_mismatch <- AllPred %>% 
@@ -21,16 +34,22 @@ summary(fit1)
 anova(fit1)
 
 ##### REPROD.OUTPUT ~ TREATMENT ####################################################
+#2016
+summary(lm(Seed_mass ~ Treatment*Stage, biomass16))
+summary(lm(Seed_mass ~ Treatment, biomass16))
 
+#2017
 summary(lm(Seed_mass ~ Plant_type*Stage, Biomass17))
 summary(lm(Seed_mass ~ Plant_type, Biomass17))
 
 
 ##### REPROD.OUTPUT ~ MISMATCH #####################################################
-output_mismatch <- Biomass17 %>% 
-  left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
-  filter(Plant_type == "C") %>%
-  select(Stage, Site, Plant_type, Seed_mass, peak.diff) 
+#2016 #Problem with 2016 Biomass data
+output_mismatch16 <- Biomass %>% 
+  left_join(AllPred, by=c("Site"="siteID", "Stage"="stage", "Year"="year")) %>% 
+  mutate(SiteID = as.factor(paste(as.factor()))
+  filter(Year == 2016, Treatment == "Control") %>%
+  select(Stage, Site, Treatment, Seed_mass, peak.diff) 
 
 fitA <- lm(Seed_mass ~ peak.diff, output_mismatch)
 fitB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch)
@@ -41,7 +60,25 @@ AIC(fitA, fitB, fitC)
 summary(fitA)
 anova(fitA)
 
+#2017
+output_mismatch17 <- Biomass17 %>% 
+  left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
+  filter(Plant_type == "C") %>%
+  select(Stage, Site, Plant_type, Seed_mass, peak.diff) 
 
+fitA <- lm(Seed_mass ~ peak.diff, output_mismatch17)
+fitB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch17)
+fitC <- lm(Seed_mass ~ peak.diff + I(peak.diff^2) + I(peak.diff^3), output_mismatch17)
+
+AIC(fitA, fitB, fitC)
+
+summary(fitA)
+anova(fitA)
+
+
+##### REPROD.OUTPUT ~ SNOWMELT #####################################################
+
+summary(lm(Seed_mass ~ ))
 ##### POLLINATION VISITATION RATE ##################################################
 rate <- pollination2 %>% 
   filter(std.fly != "Inf") %>% 
