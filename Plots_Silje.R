@@ -25,7 +25,34 @@ AllPred %>%
   
 
 ## PEAK VS. PEAK
-SM <- AllPred %>% 
+## POINTS COLORED AS STAGE
+# 2016
+AllPred %>%
+  filter(year == 2016) %>% 
+  ggplot(aes(x = peak.poll, y = peak.fl)) +
+  geom_point(aes(color = factor(stage))) +
+  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
+  geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
+  theme_minimal(base_size = 16) +
+  ggtitle("a) 2016")
+
+#2017
+AllPred %>%
+  filter(year == 2017) %>% 
+  ggplot(aes(x = peak.poll, y = peak.fl)) +
+  geom_point(aes(color = factor(stage))) +
+  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
+  geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
+  theme_minimal(base_size = 16) +
+  ggtitle("b) 2017")
+
+## POINTS COLORED AS TIME OF SNOWMELT
+#2017
+AllPred %>% 
   select(stage, siteID, peak.poll, peak.fl) %>%
   left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>%
   mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>%
@@ -35,20 +62,38 @@ SM <- AllPred %>%
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
   geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
-  theme_minimal(base_size = 18)
-
+  theme_minimal(base_size = 18) +
+  ggtitle("b) 2017")
 
 #### REPRODUCTIVE OUTPUT ##########################################################
 
 ## POLLEN LIMITATION, BY SITE
-stage_names <- c("F"="E", "E"="M", "M"="L")
 
-ggplot(Biomass, aes(y=Seed_mass, x=Plant_type))+ #, fill=as.factor(Plant_type))) 
+
+#2016
+#par(mfrow(1,2))
+Biomass %>% 
+  filter(Year == 2016) %>% 
+  ggplot(aes(y=Seed_mass, x=Treatment)) +
   geom_boxplot() +
-  facet_grid(~Stage, labeller = as_labeller(stage_names)) + 
-  theme_light(base_size = 16) + #outliers were re-weighed: they are correct
+  facet_grid(~Stage) + 
+  theme_light(base_size = 16) +
+  ggtitle("a) 2016") +
   labs(y="Reproductive output (g)", x="Treatment", fill="Treatment") +
   scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
+
+#2017
+stage_names <- c("F"="E", "E"="M", "M"="L")
+
+Biomass17 %>% 
+  ggplot(aes(y=Seed_mass, x=Plant_type))+ #, fill=as.factor(Plant_type))) 
+  geom_boxplot() +
+  facet_grid(~Stage) + #, labeller = as_labeller(stage_names)) + 
+  theme_light(base_size = 16)+
+  ggtitle("b) 2017") +
+  labs(y="Reproductive output (g)", x="Treatment", fill="Treatment") +
+  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
+
 
 
 ## BY SNOWMELT DATE
