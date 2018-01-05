@@ -189,13 +189,13 @@ head(biomass16)
 
 biomass16 <- biomass16 %>% 
   fill(Plot) %>% # fills empty plot names with value above
-  rename(Treatment = Plant, Biomass = `Vekt biomasse`, Seed_mass = `Vekt frø`, Seed_number = `Antall frø`, Ovule_number = `Antall ovuler`, Date1 = `Dato pollinert 1`, Date2 = `Dato pollinert 2`, Date3 = `Dato pollinert 3`, Name1 = Hvem1, Name2 = Hvem2, Name3 = Hvem3, Collected = `Dato samlet frø`, NameCollected = Hvem4) %>%
+ # rename(Treatment = Plant, Biomass = `Vekt biomasse`, Seed_mass = `Vekt frø`, Seed_number = `Antall frø`, Ovule_number = `Antall ovuler`, Date1 = `Dato pollinert 1`, Date2 = `Dato pollinert 2`, Date3 = `Dato pollinert 3`, Name1 = Hvem1, Name2 = Hvem2, Name3 = Hvem3, Collected = `Dato samlet frø`, NameCollected = Hvem4) %>%
   mutate(Biomass = as.numeric(Biomass), Seed_mass = as.numeric(Seed_mass)) %>% 
-  mutate(Stage = factor(substring(Plot, 1,1))) %>% 
-  mutate(Site = factor(substring(Plot, 2,3))) %>% 
-  mutate(Block = factor(substring(Plot, 4,4))) %>% 
+  mutate(Stage = gsub("^([A-Z]).*", "\\1", Plot)) %>% 
+  mutate(Site = gsub(".(\\d+).", "\\1", Plot)) %>% 
+  mutate(Block = gsub(".*([a-z])$", "\\1", Plot)) %>% 
   mutate(Treatment = ifelse(Treatment %in% c("C1", "C2"), "Control", "Pollinated")) %>% 
-  select(-Plot) %>% 
+#  select(-Plot) %>% 
   mutate(Year = 2016)
 
 
