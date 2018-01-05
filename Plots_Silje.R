@@ -1,5 +1,5 @@
 source("RanunculusData.R")
-
+library(gridExtra)
 
 ##### MISMATCH ####################################################################
 
@@ -28,18 +28,19 @@ AllPred %>%
 ## POINTS COLORED AS STAGE
 # 2016
 AllPred %>%
-  filter(year == 2016) %>% 
+  #filter(year == 2016) %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
   geom_point(aes(color = factor(stage))) +
   labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
-  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  #scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
   geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
   theme_minimal(base_size = 16) +
-  ggtitle("a) 2016")
+  facet_wrap(~year)
+  #ggtitle("a) 2016")
 
 #2017
-AllPred %>%
+plotB <- AllPred %>%
   filter(year == 2017) %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
   geom_point(aes(color = factor(stage))) +
@@ -50,16 +51,20 @@ AllPred %>%
   theme_minimal(base_size = 16) +
   ggtitle("b) 2017")
 
+grid.arrange(plotA, plotB)
+
 ## POINTS COLORED AS TIME OF SNOWMELT
 #2017
 AllPred %>% 
-  select(stage, siteID, peak.poll, peak.fl) %>%
+  select(year, stage, siteID, peak.poll, peak.fl) %>%
+  filter(year == 2017) %>% 
   left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID")) %>%
   mutate(stage = factor(stage, levels = c("F", "E", "M"))) %>%
-  ggplot(aes(x = peak.poll, y = peak.fl)) +
-  geom_point(aes(color = factor(doy))) +
+  ggplot(aes(x = peak.poll, y = peak.fl, colour = doy)) +
+  geom_point() +
   labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
-  scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  #scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
+  scale_color_gradient2(midpoint = 160, mid = "grey80") +
   geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
   geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
   theme_minimal(base_size = 18) +
@@ -360,3 +365,17 @@ pollination2 %>%
   left_join(Weather, by=c("doy")) %>% 
   ggplot(aes(x=temperature, y=std.fly)) +
   geom_point()
+
+
+#### FLOWERING (ALL IN ONE PLOT) ########################################################
+pollination2 %>% 
+  mutate(siteID = paste(site, stage, na.rm = TRUE)) %>% 
+  filter(siteID == "F 01") %>% 
+  ggplot(aes(x = doy, y = tot.flowers)) +#, color="Pollinator visitation rate")) +
+  geom_point()+
+  geom_line() + labs(y = "Day of the year", color="", x="") +
+  geom_point(aes(y = (tot.flowers*10), color="No. flowers at site")) +
+  geom_line(aes(y= (tot.flowers*10), color="No. flowers at site")) +
+  scale_y_continuous(sec.axis = sec_axis(~./10, name = "No. flowers at site")) +
+  scale_color_manual(labels = c ("Pollinator visitation rate","No. flowers"), values=c("#619CFF", "#F8766D")) +
+  theme_minimal(base_size = 18)
