@@ -74,32 +74,41 @@ AllPred %>%
 
 ## POLLEN LIMITATION, BY SITE
 
+Biomass %>% 
+  #filter(Year == 2016) %>% 
+  ggplot(aes(y=Seed_mass, x=Treatment)) +
+  geom_boxplot() +
+  facet_grid(Year~Stage) + 
+  theme_light(base_size = 16) +
+  #ggtitle("a) 2016") +
+  labs(y="", x="", fill="Treatment") +
+  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
 
 #2016
-#par(mfrow(1,2))
-Biomass %>% 
+plot1 <- Biomass %>% 
   filter(Year == 2016) %>% 
   ggplot(aes(y=Seed_mass, x=Treatment)) +
   geom_boxplot() +
-  facet_grid(~Stage) + 
+  facet_wrap(~Stage) + 
   theme_light(base_size = 16) +
   ggtitle("a) 2016") +
-  labs(y="Reproductive output (g)", x="Treatment", fill="Treatment") +
+  labs(y="Treatment", x="Reproductive output", fill="Treatment") +
   scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
 
 #2017
 stage_names <- c("F"="E", "E"="M", "M"="L")
 
-Biomass17 %>% 
-  ggplot(aes(y=Seed_mass, x=Plant_type))+ #, fill=as.factor(Plant_type))) 
+Plot2 <- Biomass %>% 
+  filter(Year == 2017) %>% 
+  ggplot(aes(y=Seed_mass, x=Treatment)) +
   geom_boxplot() +
-  facet_grid(~Stage) + #, labeller = as_labeller(stage_names)) + 
-  theme_light(base_size = 16)+
+  facet_(~Stage) + 
+  theme_light(base_size = 16) +
   ggtitle("b) 2017") +
   labs(y="Reproductive output (g)", x="Treatment", fill="Treatment") +
   scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
 
-
+grid.arrange(Plot1, Plot2)
 
 ## BY SNOWMELT DATE
 Biomass %>% 
