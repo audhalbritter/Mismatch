@@ -369,13 +369,47 @@ pollination2 %>%
 
 #### FLOWERING (ALL IN ONE PLOT) ########################################################
 pollination2 %>% 
-  mutate(siteID = paste(site, stage, na.rm = TRUE)) %>% 
-  filter(siteID == "F 01") %>% 
+  mutate(siteID = paste(stage, site)) %>% 
+  filter(year.poll == 2017) +
   ggplot(aes(x = doy, y = tot.flowers)) +#, color="Pollinator visitation rate")) +
   geom_point()+
-  geom_line() + labs(y = "Day of the year", color="", x="") +
-  geom_point(aes(y = (tot.flowers*10), color="No. flowers at site")) +
-  geom_line(aes(y= (tot.flowers*10), color="No. flowers at site")) +
-  scale_y_continuous(sec.axis = sec_axis(~./10, name = "No. flowers at site")) +
-  scale_color_manual(labels = c ("Pollinator visitation rate","No. flowers"), values=c("#619CFF", "#F8766D")) +
+  geom_line() + labs(y = "No. flowers", color="", x="Day of the year") +
+  geom_point(aes(y = (std.fly*1), color="Pollinator visitation rate")) +
+  geom_line(aes(y= (std.fly*1), color="Pollinator visitation rate")) +
+  scale_y_continuous(sec.axis = sec_axis(~./100000, name = "Visitation rate")) +
+  scale_color_manual(labels = c("Pollinator visitation rate","No. flowers"), values=c("#619CFF", "#F8766D")) +
+  facet_wrap(siteID)
   theme_minimal(base_size = 18)
+
+  
+#### FLOWERING AND VISITATION RATE IN SAME PLOT ########################################  
+
+#Flowering and visitation rates for all sites
+pollination2 %>%
+  mutate(siteID = paste(stage, site)) %>% 
+  filter(year.fl == 2017) %>% 
+  ggplot(aes(x = doy, y = tot.flowers, colour = siteID)) +
+  geom_point()+
+  geom_line() + labs(y = "No. flowers", color="", x="Day of the year") +
+  geom_point(aes(y = (std.fly*10000), color="Pollinator visitation rate")) +
+  geom_line(aes(y= (std.fly*10000), color="Pollinator visitation rate")) +
+  scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate")) +
+  theme_light()
+
+
+# Flowering and mean visitation rate per day for all sites
+mean.rate <- pollination2 %>%
+  mutate(siteID = paste(stage, site)) %>% 
+  group_by(doy) %>% 
+  mutate(mean.rate = mean(std.fly))
+
+mean.rate %>%
+  mutate(siteID = paste(stage, site)) %>%
+  filter(year.fl == 2017) %>% 
+  ggplot(aes(x = doy, y = tot.flowers, colour = siteID)) +
+  geom_point()+
+  geom_line() + labs(y = "No. flowers", color="", x="Day of the year") +
+  geom_point(aes(y = (mean.rate*1000000), color="Pollinator visitation rate")) +
+  geom_line(aes(y= (mean.rate*1000000), color="Pollinator visitation rate")) +
+  scale_y_continuous(sec.axis = sec_axis(~./10000000, name = "Visitation rate")) +
+  theme_light()
