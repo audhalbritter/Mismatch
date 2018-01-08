@@ -43,24 +43,23 @@ summary(lm(Seed_mass ~ Plant_type*Stage, Biomass17))
 summary(lm(Seed_mass ~ Plant_type, Biomass17))
 
 
-##### REPROD.OUTPUT ~ MISMATCH #####################################################
-#2016 #Problem with 2016 Biomass data
-output_mismatch16 <- Biomass %>% 
-  left_join(AllPred, by=c("Site"="siteID", "Stage"="stage", "Year"="year")) %>% 
-  mutate(SiteID = as.factor(paste(as.factor()))
+##### REPROD.OUTPUT ~ MISMATCH/OVERLAP#####################################################
+# Mismatch, 2016 #Problem with 2016 Biomass data
+output_mismatch16 <- biomass16 %>% 
+  left_join(AllPred, by=c("Site" = "site", "Stage"="stage", "Year"="year")) %>% 
   filter(Year == 2016, Treatment == "Control") %>%
   select(Stage, Site, Treatment, Seed_mass, peak.diff) 
 
-fitA <- lm(Seed_mass ~ peak.diff, output_mismatch)
-fitB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch)
-fitC <- lm(Seed_mass ~ peak.diff + I(peak.diff^2) + I(peak.diff^3), output_mismatch)
+fitA <- lm(Seed_mass ~ peak.diff, output_mismatch16)
+fitB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch16)
+fitC <- lm(Seed_mass ~ peak.diff + I(peak.diff^2) + I(peak.diff^3), output_mismatch16)
 
 AIC(fitA, fitB, fitC)
 
 summary(fitA)
 anova(fitA)
 
-#2017
+# Mismatch, 2017
 output_mismatch17 <- Biomass17 %>% 
   left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
   filter(Plant_type == "C") %>%
@@ -76,9 +75,27 @@ summary(fitA)
 anova(fitA)
 
 
-##### REPROD.OUTPUT ~ SNOWMELT #####################################################
+# Days of overlap, 2016
 
+
+# Days of overlap, 2017
+overlap17 <- Biomass %>% 
+  filter(Year == 2017) %>% 
+  left_join(Overlap_data, by=c("Stage"="stage", "siteID")) %>% 
+  mutate(Stage = as.character(Stage), siteID = as.character(siteID))
+
+modA <- lm(Seed_mass ~ overlap, overlap17)
+modB <- lm(Seed_mass ~ overlap + I(overlap^2), overlap17)
+modC<- lm(Seed_mass ~ overlap + I(overlap^2) + I(overlap^3), overlap17)
+
+AIC(modA, modB, modC) # -> modC er lavest = -3490.203
+
+summary(modA)
+anova(modA)
+
+##### REPROD.OUTPUT ~ SNOWMELT #####################################################
 summary(lm(Seed_mass ~ ))
+
 ##### POLLINATION VISITATION RATE ##################################################
 rate <- pollination2 %>% 
   filter(std.fly != "Inf") %>% 
