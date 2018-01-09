@@ -54,7 +54,7 @@ PredFl <- pred.fl %>%
 
 #********************************************************************************************
 ### Test one site and stage
-plot(dat.fl$doy, dat.fl$flower.sum)
+#plot(dat.fl$doy, dat.fl$flower.sum)
 with(new.dat.fl, lines(x = doy, y = pred), col = "red")
 
 fit1 <- glm(flower.sum ~ doy + I(doy^2), data = dat.fl, family = "poisson")
@@ -63,7 +63,7 @@ new.dat.fl <- data.frame(doy = dat.fl$doy)
 new.dat.fl$pred <- exp(predict(fit2, new.dat.fl))
 new.dat.fl
 
-plot(dat.fl$doy, dat.fl$flowering)
+#plot(dat.fl$doy, dat.fl$flowering)
 with(new.dat.fl, lines(x = doy, y = exp(pred)), col = "red")
 
 pred.fl %>% 
@@ -136,4 +136,4 @@ AllPred <- PredPoll %>%
 AllPred$siteID <- as.character(AllPred$siteID)
 AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))  
 
-save(AllPred, file = "AllPred.RData")
+#save(AllPred, file = "AllPred.RData")
