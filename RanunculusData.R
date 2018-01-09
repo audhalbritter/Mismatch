@@ -216,3 +216,18 @@ Biomass <- biomass16 %>%
   mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")))
 
 
+########################################################################
+### JOIN PHENOLOGY AND POLLINATION ####
+
+# Find closest phenology observation to each pollination observation
+pollination2 <- pollination %>% 
+  full_join(phenology, by = c("site", "stage"), suffix = c(".poll",".fl")) %>% 
+  select(-weather, -wind, -remark) %>% 
+  mutate(diff = day.poll - day.fl, abs.diff = abs(diff)) %>% 
+  mutate(abs.diff.mult = if_else(diff > 0, abs.diff * 1.9, abs.diff)) %>% 
+  group_by(day.poll, stage, site) %>% 
+  slice(which.min(abs.diff.mult)) %>%
+  mutate(doy = yday(date)) %>% 
+  mutate(flowering = ifelse(abs.diff > 3, NA, flower.sum)) %>% # could check how much different flowers are
+  mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
+  mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
