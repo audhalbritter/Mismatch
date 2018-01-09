@@ -28,14 +28,15 @@ AllPred %>%
 ## POINTS COLORED AS STAGE
 # 2016
 AllPred %>%
-  #filter(year == 2016) %>% 
+  filter(stage != "L") %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
   geom_point(aes(color = factor(stage))) +
   labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
-  #scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
-  geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
-  geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
-  theme_minimal(base_size = 16) +
+  scale_color_manual(labels = c ("E","M", "L"), values=c("#00BA38", "darkorange", "#619CFF")) +
+  #geom_abline(slope = 0.6221, intercept = 75.6327, color = "grey50", linetype = "dashed") +
+  geom_smooth(method = lm, se = FALSE, colour = "red") +
+  geom_abline(slope = 1, color = "grey50") +
+  theme_light(base_size = 16) +
   facet_wrap(~year)
   #ggtitle("a) 2016")
 
