@@ -21,6 +21,8 @@ stage_mismatch17 <- AllPred %>%
 summary(lm(peak.diff ~ stage, stage_mismatch17))
 
 ##### MISMATCH ~ DAY OF SNOWMELT ###################################################
+
+# 2017
 snowmelt_mismatch <- AllPred %>% 
   select(stage, siteID, peak.diff) %>%
   left_join(Date_snowmelt, by=c("stage"="stage", "siteID"="siteID"))
@@ -39,16 +41,16 @@ summary(lm(Seed_mass ~ Treatment*Stage, biomass16))
 summary(lm(Seed_mass ~ Treatment, biomass16))
 
 #2017
-summary(lm(Seed_mass ~ Plant_type*Stage, Biomass17))
-summary(lm(Seed_mass ~ Plant_type, Biomass17))
+summary(lm(Seed_mass ~ Treatment*Stage, Biomass17))
+summary(lm(Seed_mass ~ Treatment, Biomass17))
 
 
 ##### REPROD.OUTPUT ~ MISMATCH/OVERLAP#####################################################
 # Mismatch, 2016 #Problem with 2016 Biomass data
-output_mismatch16 <- biomass16 %>% 
-  left_join(AllPred, by=c("Site" = "site", "Stage"="stage", "Year"="year")) %>% 
+output_mismatch16 <- Biomass %>% 
+  left_join(AllPred, by=c("Stage"="stage", "Year"="year")) %>% 
   filter(Year == 2016, Treatment == "Control") %>%
-  select(Stage, Site, Treatment, Seed_mass, peak.diff) 
+  select(Stage, Treatment, Seed_mass, peak.diff) 
 
 fitA <- lm(Seed_mass ~ peak.diff, output_mismatch16)
 fitB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch16)
@@ -60,19 +62,19 @@ summary(fitA)
 anova(fitA)
 
 # Mismatch, 2017
-output_mismatch17 <- Biomass17 %>% 
-  left_join(AllPred, by=c("Site"="siteID", "Stage"="stage")) %>% 
-  filter(Plant_type == "C") %>%
-  select(Stage, Site, Plant_type, Seed_mass, peak.diff) 
+output_mismatch17 <- Biomass %>% 
+  left_join(AllPred, by=c("Stage"="stage", "Year"="year")) %>% 
+  filter(Year == 2017, Treatment == "Control") %>%
+  select(Stage, Treatment, Seed_mass, peak.diff) 
 
-fitA <- lm(Seed_mass ~ peak.diff, output_mismatch17)
-fitB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch17)
-fitC <- lm(Seed_mass ~ peak.diff + I(peak.diff^2) + I(peak.diff^3), output_mismatch17)
+modA <- lm(Seed_mass ~ peak.diff, output_mismatch17)
+modB <- lm(Seed_mass ~ peak.diff + I(peak.diff^2), output_mismatch17)
+modC <- lm(Seed_mass ~ peak.diff + I(peak.diff^2) + I(peak.diff^3), output_mismatch17)
 
-AIC(fitA, fitB, fitC)
+AIC(modA, modB, modC)
 
-summary(fitA)
-anova(fitA)
+summary(modA)
+anova(modA)
 
 
 # Days of overlap, 2016
@@ -84,20 +86,20 @@ overlap17 <- Biomass %>%
   left_join(Overlap_data, by=c("Stage"="stage", "siteID")) %>% 
   mutate(Stage = as.character(Stage), siteID = as.character(siteID))
 
-modA <- lm(Seed_mass ~ overlap, overlap17)
-modB <- lm(Seed_mass ~ overlap + I(overlap^2), overlap17)
-modC<- lm(Seed_mass ~ overlap + I(overlap^2) + I(overlap^3), overlap17)
+mod1 <- lm(Seed_mass ~ overlap, overlap17)
+mod2 <- lm(Seed_mass ~ overlap + I(overlap^2), overlap17)
+mod3<- lm(Seed_mass ~ overlap + I(overlap^2) + I(overlap^3), overlap17)
 
-AIC(modA, modB, modC) # -> modC er lavest = -3490.203
+AIC(mod1, mod2, mod3) # -> mod3 er lavest = -3490.203
 
-summary(modA)
-anova(modA)
+summary(mod?)
+anova(mod?)
 
 ##### REPROD.OUTPUT ~ SNOWMELT #####################################################
 summary(lm(Seed_mass ~ ))
 
 ##### POLLINATION VISITATION RATE ##################################################
-rate <- pollination2 %>% 
+vis.rate <- pollination2 %>% 
   filter(std.fly != "Inf") %>% 
   mutate(siteID = as.factor(paste(stage, site, sep = " "))) %>%
   filter(year.poll == 2017) %>%
@@ -105,6 +107,5 @@ rate <- pollination2 %>%
   ungroup() %>%
   mutate(stage = factor(stage), doy = yday(date))
 
-summary(lm(std.fly ~ doy, rate))
-
-summary(lm(std.fly ~ doy + Snowmelt_date, rate))
+summary(lm(std.fly ~ doy, vis.rate))
+summary(lm(std.fly ~ doy + Snowmelt_date, vis.rate))
