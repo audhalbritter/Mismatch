@@ -366,7 +366,7 @@ pollination2 %>%
   ggplot(aes(x=date, y=std.fly, color = Snowmelt_date)) +
   geom_point() +
   geom_smooth() +
-  facet_wrap(site ~ stage)
+  facet_wrap( ~ stage)
 
 pollination2 %>%
   filter(year.poll==2017) %>%
@@ -379,16 +379,20 @@ pollination2 %>%
 #### FLOWERING (ALL IN ONE PLOT) ########################################################
 pollination2 %>% 
   mutate(siteID = paste(stage, site)) %>% 
-  filter(year.poll == 2017) +
-  ggplot(aes(x = doy, y = tot.flowers)) +#, color="Pollinator visitation rate")) +
+  filter(year.poll == 2017) %>% 
+  ggplot(aes(x = doy, y = fl.sqm)) +#, color="Pollinator visitation rate")) +
   geom_point()+
-  geom_line() + labs(y = "No. flowers", color="", x="Day of the year") +
-  geom_point(aes(y = (std.fly*1), color="Pollinator visitation rate")) +
-  geom_line(aes(y= (std.fly*1), color="Pollinator visitation rate")) +
-  scale_y_continuous(sec.axis = sec_axis(~./100000, name = "Visitation rate")) +
+  geom_smooth(se = FALSE) +
+  #geom_line() + 
+  labs(y = "No. flowers", color="", x="Day of the year") +
+  geom_point(aes(y = (std.fly*1000), color="Pollinator visitation rate")) +
+  #geom_line(aes(y= (std.fly*30000), color="Pollinator visitation rate")) +
+  geom_smooth(aes(y = (std.fly*1000))) +
+  scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate")) +
   scale_color_manual(labels = c("Pollinator visitation rate","No. flowers"), values=c("#619CFF", "#F8766D")) +
-  facet_wrap(siteID)
-  theme_minimal(base_size = 18)
+  facet_wrap(~ stage) +
+  theme(legend.position="none")
+  #theme_minimal(base_size = 18)
 
   
 #### FLOWERING AND VISITATION RATE IN SAME PLOT ########################################  
