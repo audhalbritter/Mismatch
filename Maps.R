@@ -49,7 +49,7 @@ dev.off()
 
 # Making single plots
 all %>%
-  filter(site == 01, stage == "E") %>% 
+  filter(year == 2017, site == 01, stage == "E") %>% 
   ggplot(aes(x = doy, y = value, color = variable)) +
   geom_point() +
   geom_line(aes(y = pred, color = variable)) +
