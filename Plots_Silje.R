@@ -24,6 +24,20 @@ AllPred %>%
   labs(y="Mismatch (no. days)", x="Day of snowmelt") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   theme_light(base_size = 18)
+
+
+## FLOWERING + POLLINATOR VISITS *not finished*
+all %>% 
+  mutate(siteID = paste(stage, site, sep = " ")) %>% 
+  filter(year.x == 2017, siteID == "E 04") %>% 
+  ggplot(aes(x = doy, y = value, color = variable)) +
+  geom_point() +
+  geom_line(aes(y = pred, color = variable)) +
+  labs(x = "Day of the year", y = "No. flowers") +
+  scale_color_manual(values = c("yellow", "green")) +
+  scale_y_continuous(sec.axis= sec_axis(~./10, name="Pollinator visitats")) +
+  ggtitle("E 04") + #unique(paste(dat$year, dat$stage, dat$site, sep = " "))) +
+  theme_minimal()
   
 
 ## PEAK VS. PEAK
@@ -33,13 +47,14 @@ AllPred %>%
   filter(stage != "L") %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
   geom_point(aes(color = factor(stage))) +
-  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
+  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Snowmelt stage") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#00BA38", "darkorange", "#619CFF")) +
   #geom_abline(slope = 0.6221, intercept = 75.6327, color = "grey50", linetype = "dashed") +
   geom_smooth(method = lm, se = FALSE, colour = "red") +
   geom_abline(slope = 1, color = "grey50") +
   theme_light(base_size = 16) +
-  facet_wrap(~year)
+  facet_wrap(~year) +
+  theme(legend.position = "bottom", legend.title=element_text(size=12), legend.text=element_text(size=12))
   #ggtitle("a) 2016")
 
 #2017
@@ -47,11 +62,12 @@ plotB <- AllPred %>%
   filter(year == 2017) %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
   geom_point(aes(color = factor(stage))) +
-  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Time of snowmelt") +
+  labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Snowmelt stage") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#F8766D", "#00BA38", "#619CFF")) +
   geom_abline(slope = 0.6221, intercept = 75.6327, color = "red") +
   geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
   theme_minimal(base_size = 16) +
+  theme(legend.position = "bottom") +
   ggtitle("b) 2017")
 
 grid.arrange(plotA, plotB)
@@ -73,45 +89,47 @@ AllPred %>%
   theme_minimal(base_size = 18) +
   ggtitle("b) 2017")
 
+
 #### REPRODUCTIVE OUTPUT ##########################################################
 
-## POLLEN LIMITATION, BY SITE
+## POLLEN LIMITATION, BY SITE *unable to change grid labels... (F=E, E=M, M=L) *
 
 Biomass %>% 
-  #filter(Year == 2016) %>% 
-  ggplot(aes(y=Seed_mass, x=Treatment)) +
+  filter(Stage != "L") %>%
+  ggplot(aes(y=Seed_mass, x=Treatment, fill=as.factor(Year))) +
   geom_boxplot() +
-  facet_grid(Year~Stage) + 
-  theme_light(base_size = 16) +
-  #ggtitle("a) 2016") +
-  labs(y="", x="", fill="Treatment") +
-  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
+  facet_grid(~Stage) +
+  theme_linedraw(base_size = 16) +
+  labs(y="Reproductive output", x="Treatment", fill="Year") +
+  scale_fill_manual(values=c("#619CFF", "darkorange"))
 
 #2016
-plot1 <- Biomass %>% 
-  filter(Year == 2016) %>% 
-  ggplot(aes(y=Seed_mass, x=Treatment)) +
+PlotA <- Biomass %>% 
+  filter(Year == 2016, Stage != "L") %>% 
+  ggplot(aes(y=Seed_mass, x=Treatment, fill = as.factor(Treatment))) +
   geom_boxplot() +
   facet_wrap(~Stage) + 
   theme_light(base_size = 16) +
+  theme(legend.position="none") +
   ggtitle("a) 2016") +
-  labs(y="Treatment", x="Reproductive output", fill="Treatment") +
-  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
+  labs(x="Treatment", y="Reproductive output", fill="Treatment") +
+  scale_fill_manual(values = c("#619CFF", "darkorange"))
 
 #2017
 stage_names <- c("F"="E", "E"="M", "M"="L")
 
-Plot2 <- Biomass %>% 
+PlotB <- Biomass %>% 
   filter(Year == 2017) %>% 
-  ggplot(aes(y=Seed_mass, x=Treatment)) +
+  ggplot(aes(y=Seed_mass, x=Treatment, fill = as.factor(Treatment))) +
   geom_boxplot() +
-  facet_(~Stage) + 
+  facet_wrap(~Stage) + 
   theme_light(base_size = 16) +
+  theme(legend.position="none") +
   ggtitle("b) 2017") +
-  labs(y="Reproductive output (g)", x="Treatment", fill="Treatment") +
-  scale_fill_manual(labels = c("control (C)", "hand-pollinated (HP)")) #, values = c("#F8766D", "#00BA38"))
+  labs(y="Reproductive output", x="Treatment", fill="Treatment") +
+  scale_fill_manual(values = c("#619CFF", "darkorange"))
 
-grid.arrange(Plot1, Plot2)
+grid.arrange(PlotA, PlotB)
 
 ## BY SNOWMELT DATE
 Biomass %>% 
@@ -383,19 +401,19 @@ pollination2 %>%
 pollination2 %>% 
   mutate(siteID = paste(stage, site)) %>% 
   filter(year.poll == 2017) %>% 
-  ggplot(aes(x = doy, y = fl.sqm)) +#, color="Pollinator visitation rate")) +
-  geom_point()+
-  geom_smooth(se = FALSE) +
-  #geom_line() + 
+  ggplot(aes(x = doy, y = fl.sqm, colour=fl.sqm)) +
+  geom_point(colour = "#619CFF") +
+  geom_smooth(se = FALSE, colour = "#619CFF") +
   labs(y = "No. flowers", color="", x="Day of the year") +
   geom_point(aes(y = (std.fly*1000), color="Pollinator visitation rate")) +
-  #geom_line(aes(y= (std.fly*30000), color="Pollinator visitation rate")) +
-  geom_smooth(aes(y = (std.fly*1000))) +
-  scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate")) +
-  scale_color_manual(labels = c("Pollinator visitation rate","No. flowers"), values=c("#619CFF", "#F8766D")) +
+  geom_smooth(aes(y = (std.fly*1000)), se = FALSE, colour = "darkorange") +
+  scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate"), limits = c(-0.5, 100)) +
+  scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("darkorange", "#619CFF")) +
   facet_wrap(~ stage) +
-  theme(legend.position="none")
-  #theme_minimal(base_size = 18)
+  theme_light(base_size = 18) +
+  theme(legend.position = "bottom")
+  #theme(legend.position="none")
+  
 
   
 #### FLOWERING AND VISITATION RATE IN SAME PLOT ########################################  
