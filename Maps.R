@@ -11,6 +11,7 @@ pred <- pred.fl %>%
   mutate(variable = "flowers") %>% 
   rbind(pred.pl)
 
+## 2017
 # add variable and combine flower and insect data
 fl <- dat.fl %>% 
   ungroup() %>% 
@@ -46,6 +47,42 @@ pdf(file = "ComboCurves.pdf")
 ComboCurves$combo.curves
 dev.off()
 
+
+## 2016
+fl <- dat.fl %>% 
+  ungroup() %>% 
+  select(year, doy, stage, site, flower.sum) %>% 
+  mutate(variable = "flowers") %>% 
+  rename(value = flower.sum)
+
+all <- dat.pol %>% 
+  select(year, doy, stage, site, fly) %>% 
+  mutate(variable = "pollinators", fly = ifelse(year == 2016, 10*fly, fly)) %>% 
+  rename(value = fly) %>% 
+  rbind(fl) %>% 
+  left_join(pred, by = c("site", "stage", "doy", "variable"))
+
+
+# Function to plot points and curves for predicted values and data
+combined16 <- function(dat){dat %>% 
+    ggplot(aes(x = doy, y = value, color = variable)) +
+    geom_point() +
+    geom_line(aes(y = pred, color = variable)) +
+    labs(x = "Day of the year", y = "No. flowers") +
+    scale_color_manual(values = c("yellow", "green")) +
+    scale_y_continuous(sec.axis= sec_axis(~./10, name="Pollinator visitation rate")) +
+    ggtitle(unique(paste(dat$year, dat$stage, dat$site, sep = " "))) +
+    theme_minimal()
+}
+
+# Make plots and print PDF
+ComboCurves16 <- all %>% 
+  group_by(year.y, site, stage) %>%
+  filter(stage !="L") %>% 
+  do(combo.curves16 = combined(.))
+pdf(file = "ComboCurves16.pdf")
+ComboCurves16$combo.curves16
+dev.off()
 
 # Making single plots
 all %>%
