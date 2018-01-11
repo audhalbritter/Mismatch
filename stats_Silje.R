@@ -18,8 +18,7 @@ anova(lm(peak.fl~peak.poll, peaks.17))
 ##### MISMATCH ~ STAGE #############################################################
 # 2016
 stage_mismatch16 <- AllPred %>% 
-  filter(year == 2016) %>% 
-  select(year, stage, siteID, peak.diff)
+  filter(year == 2016, stage != "L")
   
 summary(lm(peak.diff ~ stage, stage_mismatch16))
 
@@ -50,7 +49,7 @@ summary(lm(Seed_mass ~ Treatment, treat17))
 treat17 <- Biomass %>% 
   filter(Year == 2017, Treatment=="Control")
 summary(lm(Seed_mass ~ Stage, treat17))
-
+anova(lm(Seed_mass ~ Stage, treat17))
 
 
 ##### REPROD.OUTPUT ~ MISMATCH #####################################################
