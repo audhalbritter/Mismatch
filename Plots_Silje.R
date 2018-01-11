@@ -397,7 +397,26 @@ pollination2 %>%
   geom_point()
 
 
-#### FLOWERING (ALL IN ONE PLOT) ########################################################
+#### FLOWERING AND VISITATION RATE ###################################################
+
+# 2016
+pollination2 %>% 
+  mutate(siteID = paste(stage, site)) %>% 
+  filter(year.poll == 2016, stage != "L") %>% 
+  ggplot(aes(x = doy, y = fl.sqm, colour=fl.sqm)) +
+  geom_point(colour = "#619CFF") +
+  geom_smooth(se = FALSE, colour = "#619CFF") +
+  labs(y = "No. flowers", color="", x="Day of the year") +
+  geom_point(aes(y = (std.fly*1000), color="Pollinator visitation rate")) +
+  geom_smooth(aes(y = (std.fly*1000)), se = FALSE, colour = "darkorange") +
+  scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate"), limits = c(-0.5, 100)) +
+  scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("darkorange", "#619CFF")) +
+  facet_wrap(~ stage) +
+  theme_light(base_size = 18) +
+  theme(legend.position = "bottom")
+#theme(legend.position="none")
+
+# 2017
 pollination2 %>% 
   mutate(siteID = paste(stage, site)) %>% 
   filter(year.poll == 2017) %>% 
@@ -413,7 +432,6 @@ pollination2 %>%
   theme_light(base_size = 18) +
   theme(legend.position = "bottom")
   #theme(legend.position="none")
-  
 
   
 #### FLOWERING AND VISITATION RATE IN SAME PLOT ########################################  
