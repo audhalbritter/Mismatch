@@ -2,6 +2,7 @@ source("RanunculusData.R")
 source("PeakPredicted.R")
 
 library(gridExtra)
+library(broom)
 
 ##### MISMATCH ####################################################################
 
@@ -43,19 +44,27 @@ all %>%
 ## PEAK VS. PEAK
 ## POINTS COLORED AS STAGE
 # 2016
+match <- 5
+peaks16 <- lm(peak.fl ~ peak.poll, AllPred, subset = year == 2016 & stage != "L")
+peaks17 <- lm(peak.fl ~ peak.poll, AllPred, subset = year == 2017 & stage != "L")
+
+peak.pr <- bind_rows(`2016` = augment(peaks16), `2017` = augment(peaks17),.id = "year") %>% 
+  mutate(ymin=.fitted-match, ymax=.fitted+match) %>%
+  mutate(year = as.numeric(year)) %>% 
+  arrange(peak.poll)
+
 AllPred %>%
   filter(stage != "L") %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
-  geom_point(aes(color = factor(stage))) +
+  geom_ribbon(aes(ymax=ymax, ymin=ymin), fill = "black",alpha = 0.1, peak.pr) +
   labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Snowmelt stage") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#00BA38", "darkorange", "#619CFF")) +
-  #geom_abline(slope = 0.6221, intercept = 75.6327, color = "grey50", linetype = "dashed") +
-  geom_smooth(method = lm, se = FALSE, colour = "red") +
-  geom_abline(slope = 1, color = "grey50") +
+  geom_smooth(method = lm, se = FALSE, colour = "black", size = 0.7) +
+  geom_abline(slope = 1, color = "grey50", linetype ="dashed") +
+  geom_point(aes(color = factor(stage))) +
   theme_light(base_size = 16) +
   facet_wrap(~year) +
   theme(legend.position = "bottom", legend.title=element_text(size=12), legend.text=element_text(size=12))
-  #ggtitle("a) 2016")
 
 #2017
 plotB <- AllPred %>%
@@ -418,17 +427,18 @@ pollination2 %>%
 
 # 2017
 pollination2 %>% 
-  mutate(siteID = paste(stage, site)) %>% 
+  ungroup() %>% 
+  mutate(std.fly=std.fly*2000) %>% 
+  select(year.poll, stage, std.fly, fl.sqm, doy) %>% 
+  gather(key = category, value = value, -year.poll, -stage, -doy) %>% 
   filter(year.poll == 2017) %>% 
-  ggplot(aes(x = doy, y = fl.sqm, colour=fl.sqm)) +
-  geom_point(colour = "#619CFF") +
-  geom_smooth(se = FALSE, colour = "#619CFF") +
+  ggplot(aes(x = doy, y = value, colour=category)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
   labs(y = "No. flowers", color="", x="Day of the year") +
-  geom_point(aes(y = (std.fly*1000), color="Pollinator visitation rate")) +
-  geom_smooth(aes(y = (std.fly*1000)), se = FALSE, colour = "darkorange") +
-  scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate"), limits = c(-0.5, 100)) +
+  scale_y_continuous(sec.axis = sec_axis(~./2000, name = "Visitation rate"), limits = c(-0.5, 100)) +
   scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("darkorange", "#619CFF")) +
-  facet_wrap(~ stage) +
+  facet_wrap(~ stage, labeller = labeller(stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
   theme_light(base_size = 18) +
   theme(legend.position = "bottom")
   #theme(legend.position="none")
