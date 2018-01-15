@@ -53,15 +53,21 @@ peak.pr <- bind_rows(`2016` = augment(peaks16), `2017` = augment(peaks17),.id = 
   mutate(year = as.numeric(year)) %>% 
   arrange(peak.poll)
 
+peak.pr <- bind_rows(`2016` = augment(peaks16), `2017` = augment(peaks17),.id = "year") %>% 
+  mutate(ymin = 0-match, ymax = 0+match) %>%
+  mutate(year = as.numeric(year)) %>% 
+  arrange(peak.poll)
+
 AllPred %>%
   filter(stage != "L") %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
-  geom_ribbon(aes(ymax=ymax, ymin=ymin), fill = "black",alpha = 0.1, peak.pr) +
+  #geom_ribbon(aes(ymax = ymax, ymin = ymin, peak.pr)) +
+  #geom_ribbon(aes(ymax=ymax, ymin=ymin), fill = "black",alpha = 0.1, peak.pr) +
   labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Snowmelt stage") +
   scale_color_manual(labels = c ("E","M", "L"), values=c("#00BA38", "darkorange", "#619CFF")) +
-  geom_smooth(method = lm, se = FALSE, colour = "black", size = 0.7) +
-  geom_abline(slope = 1, color = "grey50", linetype ="dashed") +
-  geom_point(aes(color = factor(stage))) +
+  geom_smooth(method = lm, se = FALSE, colour = "black", size = 1) +
+  geom_abline(slope = 1, color = "black", size = 20, alpha = 0.1) +
+  geom_point(aes(color = factor(stage)), size = 1.75) +
   theme_light(base_size = 16) +
   facet_wrap(~year) +
   theme(legend.position = "bottom", legend.title=element_text(size=12), legend.text=element_text(size=12))
@@ -107,8 +113,8 @@ Biomass %>%
   filter(Stage != "L") %>%
   ggplot(aes(y=Seed_mass, x=Treatment, fill=as.factor(Year))) +
   geom_boxplot() +
-  facet_grid(~Stage) +
-  theme_linedraw(base_size = 16) +
+  facet_wrap(~Stage, labeller = labeller(Stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
+  theme_light(base_size = 16) +
   labs(y="Reproductive output", x="Treatment", fill="Year") +
   scale_fill_manual(values=c("#619CFF", "darkorange"))
 
@@ -131,7 +137,7 @@ PlotB <- Biomass %>%
   filter(Year == 2017) %>% 
   ggplot(aes(y=Seed_mass, x=Treatment, fill = as.factor(Treatment))) +
   geom_boxplot() +
-  facet_wrap(~Stage) + 
+  facet_wrap(~Stage, labeller = labeller(Stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) + 
   theme_light(base_size = 16) +
   theme(legend.position="none") +
   ggtitle("b) 2017") +
@@ -437,7 +443,7 @@ pollination2 %>%
   geom_smooth(se = FALSE) +
   labs(y = "No. flowers", color="", x="Day of the year") +
   scale_y_continuous(sec.axis = sec_axis(~./2000, name = "Visitation rate"), limits = c(-0.5, 100)) +
-  scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("darkorange", "#619CFF")) +
+  scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("#619CFF", "darkorange")) +
   facet_wrap(~ stage, labeller = labeller(stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
   theme_light(base_size = 18) +
   theme(legend.position = "bottom")
