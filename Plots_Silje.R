@@ -4,6 +4,8 @@ source("PeakPredicted.R")
 library(gridExtra)
 library(broom)
 
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 ##### MISMATCH ####################################################################
 
 ## BY SITE
@@ -53,11 +55,6 @@ peak.pr <- bind_rows(`2016` = augment(peaks16), `2017` = augment(peaks17),.id = 
   mutate(year = as.numeric(year)) %>% 
   arrange(peak.poll)
 
-peak.pr <- bind_rows(`2016` = augment(peaks16), `2017` = augment(peaks17),.id = "year") %>% 
-  mutate(ymin = 0-match, ymax = 0+match) %>%
-  mutate(year = as.numeric(year)) %>% 
-  arrange(peak.poll)
-
 AllPred %>%
   filter(stage != "L") %>% 
   ggplot(aes(x = peak.poll, y = peak.fl)) +
@@ -65,9 +62,8 @@ AllPred %>%
   #geom_ribbon(aes(ymax=ymax, ymin=ymin), fill = "black",alpha = 0.1, peak.pr) +
   labs(x = "Peak pollinator visitation (d.o.y)", y = "Peak flowering (d.o.y)", color = "Snowmelt stage") +
   geom_smooth(method = lm, se = FALSE, colour = "black", size = 1) +
-  scale_color_manual(labels = c ("early","mid", "late"), values=c("#00BA38", "darkorange", "#619CFF")) +
-  geom_point(aes(shape = factor(stage), colour = factor(stage))) +
-  geom_abline(slope = 1, color = "black", size = 20, alpha = 0.1) +
+  geom_point(aes(colour = factor(stage)), size = 2) +
+  scale_color_manual(labels = c ("early","mid", "late"), values=cbbPalette[c(7,3,5)]) +geom_abline(slope = 1, color = "black", size = 20, alpha = 0.1) +
   theme_light(base_size = 16) +
   facet_wrap(~year) +
   theme(legend.position = "bottom", legend.title=element_text(size=12), legend.text=element_text(size=12))
@@ -101,7 +97,7 @@ Biomass %>%
   facet_wrap(~Stage, labeller = labeller(Stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
   theme_light(base_size = 16) +
   labs(y="Reproductive output", x="Treatment", fill="Year") +
-  scale_fill_manual(values=c("#619CFF", "darkorange"))
+  scale_fill_manual(values=cbbPalette[c(7,3)])
 
 #2016
 PlotA <- Biomass %>% 
@@ -424,12 +420,12 @@ pollination2 %>%
   gather(key = category, value = value, -year.poll, -stage, -doy) %>% 
   mutate(Flowering = value) %>% 
   filter(year.poll == 2017) %>% 
-  ggplot(aes(x = doy, y = Flowering, shape=category, colour=category)) +
+  ggplot(aes(x = doy, y = Flowering, colour=category)) +
   geom_point() +
-  scale_shape_manual(labels = c("Pollinator visitation rate","Flowering"), values = c(1, 2)) +
-  scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("#619CFF", "darkorange")) +
+  #scale_shape_manual(labels = c("Flowering","Pollinator visitation rate"), values = c(1, 2)) +
+  scale_color_manual(labels = c("Flowering","Pollinator visitation rate"), values = cbbPalette[c(3,7)]) +
   geom_smooth(se = FALSE) +
-  #labs(y = "No. flowers", color="", x="Day of the year") +
+  labs(y = "No. flowers", color="", x="Day of the year") +
   scale_y_continuous(sec.axis = sec_axis(~./2000, name = "Visitation rate"), limits = c(-0.5, 100)) +
   facet_wrap(~ stage, labeller = labeller(stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
   theme_light(base_size = 18) +
