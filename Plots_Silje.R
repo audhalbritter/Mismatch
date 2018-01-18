@@ -104,12 +104,13 @@ PlotA <- Biomass %>%
   filter(Year == 2016, Stage != "L") %>% 
   ggplot(aes(y=Seed_mass, x=Treatment, fill = as.factor(Treatment))) +
   geom_boxplot() +
-  facet_wrap(~Stage) + 
+  facet_wrap(~Stage, labeller = labeller(Stage = as_labeller(c("E" = "early", "M" = "mid")))) + 
   theme_light(base_size = 16) +
-  theme(legend.position="none") +
+  theme(legend.position="none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.title.x = element_blank()) +
+  ggtitle("b) 2017")+
   ggtitle("a) 2016") +
-  labs(x="Treatment", y="Reproductive output", fill="Treatment") +
-  scale_fill_manual(values = c("#619CFF", "darkorange"))
+  labs(x="Treatment", y="Achene weight (g)", fill="Treatment") +
+  scale_fill_manual(values=cbbPalette[c(7,3)])
 
 #2017
 stage_names <- c("F"="E", "E"="M", "M"="L")
@@ -118,12 +119,12 @@ PlotB <- Biomass %>%
   filter(Year == 2017) %>% 
   ggplot(aes(y=Seed_mass, x=Treatment, fill = as.factor(Treatment))) +
   geom_boxplot() +
-  facet_wrap(~Stage, labeller = labeller(Stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) + 
+  facet_wrap(~Stage, labeller = labeller(Stage = as_labeller(c("F"="early", "E" = "mid", "M" = "late")))) + 
   theme_light(base_size = 16) +
-  theme(legend.position="none") +
+  theme(legend.position="none", panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank()) +
   ggtitle("b) 2017") +
-  labs(y="Reproductive output", x="Treatment", fill="Treatment") +
-  scale_fill_manual(values = c("#619CFF", "darkorange"))
+  labs(y="Achene weight (g)", x="Treatment", fill="Treatment") +
+  scale_fill_manual(values=cbbPalette[c(7,3)])
 
 grid.arrange(PlotA, PlotB)
 
@@ -382,8 +383,8 @@ pollination2 %>%
   #filter(siteID == "F 06") %>% 
   ggplot(aes(x=date, y=std.fly, color = Snowmelt_date)) +
   geom_point() +
-  geom_smooth() +
-  facet_wrap( ~ stage)
+  geom_smooth()
+  #facet_wrap( ~ stage)
 
 pollination2 %>%
   filter(year.poll==2017) %>%
@@ -394,23 +395,37 @@ pollination2 %>%
 
 
 #### FLOWERING AND VISITATION RATE ###################################################
+pollination2 %>% 
+  ungroup() %>% 
+  mutate(std.fly=std.fly*1000) %>% 
+  select(year.poll, stage, std.fly, fl.sqm, doy) %>% 
+  gather(key = category, value = value, -year.poll, -stage, -doy) %>% 
+  mutate(Flowering = value) %>% 
+  filter(year.poll == 2016, stage != "L") %>% 
+  ggplot(aes(x = doy, y = Flowering, colour=category)) +
+  geom_point() +
+  facet_wrap(~ stage, labeller = labeller(stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) 
 
 # 2016
 pollination2 %>% 
-  mutate(siteID = paste(stage, site)) %>% 
+  ungroup() %>% 
+  mutate(std.fly=std.fly*1000) %>% 
+  select(year.poll, stage, std.fly, fl.sqm, doy) %>% 
+  gather(key = category, value = value, -year.poll, -stage, -doy) %>% 
+  mutate(Flowering = value) %>% 
   filter(year.poll == 2016, stage != "L") %>% 
-  ggplot(aes(x = doy, y = fl.sqm, colour=fl.sqm)) +
-  geom_point(colour = "#619CFF") +
-  geom_smooth(se = FALSE, colour = "#619CFF") +
+  ggplot(aes(x = doy, y = Flowering, colour=category)) +
+  geom_point() +
+  scale_shape_manual(labels = c("Pollinator visitation rate", "Flowering"), values = c(1, 2)) +
+  scale_color_manual(labels = c("Pollinator visitation rate", "Flowering"), values = cbbPalette[c(3,7)]) +
+  geom_smooth(se = FALSE) +
   labs(y = "No. flowers", color="", x="Day of the year") +
-  geom_point(aes(y = (std.fly*1000), color="Pollinator visitation rate")) +
-  geom_smooth(aes(y = (std.fly*1000)), se = FALSE, colour = "darkorange") +
   scale_y_continuous(sec.axis = sec_axis(~./1000, name = "Visitation rate"), limits = c(-0.5, 100)) +
-  scale_color_manual(labels = c("Pollinator visitation rate","Flowering"), values = c("darkorange", "#619CFF")) +
-  facet_wrap(~ stage) +
+  facet_wrap(~ stage, labeller = labeller(stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
   theme_light(base_size = 18) +
   theme(legend.position = "bottom")
 #theme(legend.position="none")
+
 
 # 2017
 pollination2 %>% 
@@ -422,7 +437,7 @@ pollination2 %>%
   filter(year.poll == 2017) %>% 
   ggplot(aes(x = doy, y = Flowering, colour=category)) +
   geom_point() +
-  #scale_shape_manual(labels = c("Flowering","Pollinator visitation rate"), values = c(1, 2)) +
+  scale_shape_manual(labels = c("Flowering","Pollinator visitation rate"), values = c(1, 2)) +
   scale_color_manual(labels = c("Flowering","Pollinator visitation rate"), values = cbbPalette[c(3,7)]) +
   geom_smooth(se = FALSE) +
   labs(y = "No. flowers", color="", x="Day of the year") +
@@ -464,3 +479,17 @@ mean.rate %>%
   geom_line(aes(y= (mean.rate*1000000), color="Pollinator visitation rate")) +
   scale_y_continuous(sec.axis = sec_axis(~./10000000, name = "Visitation rate")) +
   theme_light()
+
+##### CONSTRUCTED MISMATCH PLOTS ##############
+x <- rnorm(100, mean = 0,1)
+hx <- dnorm(x)
+y <- rnorm(100, mean = 3,1)
+hy <- dnorm(y)
+
+plot(x, hx)
+plot(y, hy)
+
+myYlim <- c(0, 5)
+
+plot(x, hx, from = -3, to = 3, ylim = myYlim)
+plot(y, hy,from = -3, to = 3, add = TRUE)
