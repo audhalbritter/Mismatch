@@ -131,7 +131,10 @@ AllPred <- PredPoll %>%
   left_join(PredFl, by=c("stage"="stage", "site"="site", "year")) %>% 
   mutate(peak.diff = peak.fl-peak.poll, siteID = paste(stage, site)) %>%  # calculate difference
   mutate(stage = factor(stage, levels = c("F", "E", "M", "L"))) %>% 
-  mutate(siteID = factor(siteID))
+  mutate(siteID = factor(siteID)) %>%
+  mutate(first = ifelse(first.poll > first.fl, first.poll, first.fl)) %>%
+  mutate(last = ifelse(last.poll < last.fl, last.poll, last.fl)) %>%
+  mutate(overlap = last - first)
 
 AllPred$siteID <- as.character(AllPred$siteID)
 AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))  
