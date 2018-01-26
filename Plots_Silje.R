@@ -94,11 +94,9 @@ AllPred %>%
 
 Biomass %>% 
   filter(Stage != "L") %>%
-  mutate(Stage2 = ifelse(Year == 2017, plyr::mapvalues(Stage, c("F", "E", "M"), c("E", "M", "L")), Stage)) %>% 
-  filter(Year == 2017) %>% select(Stage, Stage2)
   ggplot(aes(y=Seed_mass, x=Treatment, fill = Treatment)) +
   geom_boxplot() +
-  facet_grid(Year~Stage) +
+  facet_grid(Year~Stage, labeller = labeller(Stage = as_labeller(c("F" = "early", "E" = "mid", "M" = "late")))) +
   theme_light(base_size = 16) +
   labs(y="Reproductive output", x="", fill="") +
   scale_fill_manual(values=cbbPalette[c(7,3)])
@@ -451,7 +449,7 @@ pollination2 %>%
   facet_wrap(~ stage, labeller = labeller(stage = as_labeller(c("F"="E", "E" = "M", "M" = "L")))) +
   theme_light(base_size = 18) +
   theme(legend.position = "bottom")
-  #theme(legend.position="none")
+    #theme(legend.position="none")
 
   
 #### FLOWERING AND VISITATION RATE IN SAME PLOT ########################################  
@@ -486,16 +484,58 @@ mean.rate %>%
   scale_y_continuous(sec.axis = sec_axis(~./10000000, name = "Visitation rate")) +
   theme_light()
 
+
+
 ##### CONSTRUCTED MISMATCH PLOTS ##############
-x <- rnorm(100, mean = 0,1)
-hx <- dnorm(x)
-y <- rnorm(100, mean = 3,1)
-hy <- dnorm(y)
+fl.x = rnorm(n = 100, mean = 4, sd = 1)
+fl.hx = dnorm(fl.x)
+poll.x = rnorm(n = 100, mean = 20)
+poll.hx = dnorm(poll.x)
 
-plot(x, hx)
-plot(y, hy)
+dd <- data_frame(fl.x, fl.hx, poll.x, poll.hx)
 
-myYlim <- c(0, 5)
+ggplot(dd, aes(x = fl.x, y = fl.hx)) +
+  geom_line() +
+  geom_line(aes(x = poll.x, y = poll.hx))
 
-plot(x, hx, from = -3, to = 3, ylim = myYlim)
-plot(y, hy,from = -3, to = 3, add = TRUE)
+plot(fl.x, fl.hx)
+plot(poll.x, poll.hx)
+
+# Mismatch type 1
+ggplot(data.frame(x = c(-10, 18)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#D55E00", size = 1.2) +
+  stat_function(fun = dnorm, args = list(mean = 5, sd = 4), col="#56B4E9", size = 1.2) +
+  theme_light() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+# Mismatch type 3
+ggplot(data.frame(x = c(-10, 18)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#56B4E9", size = 1.2) +
+  stat_function(fun = dnorm, args = list(mean = 5, sd = 4), col="#D55E00", size = 1.2) +
+  theme_light() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+# Mismatch type 2
+ggplot(data.frame(x = c(-13, 15)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#56B4E9", size = 1.2) +
+  stat_function(fun = dnorm, args = list(mean = 0.5, sd = 4), col="#D55E00", size = 1.2) +
+  theme_light() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
