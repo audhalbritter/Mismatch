@@ -21,7 +21,7 @@ ReadIniButtons <- function(textfile){
 }
 
 # MAKE LIST OF ALL TXT FILES AND MERGE THEM TO ONE DATA FRAME
-myfiles <- dir(path = paste0("~/Dropbox/Bergen/Mismatch/Data/2016/iButtons"), pattern = "txt", recursive = TRUE, full.names = TRUE)
+myfiles <- dir(path = paste0("Data/2016/iButtons"), pattern = "txt", recursive = TRUE, full.names = TRUE)
 mdat <- plyr::ldply(as.list(myfiles), ReadIniButtons)
 
 # Rename stage
