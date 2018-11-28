@@ -132,14 +132,23 @@ Date_snowmelt <- Date_snowmelt %>%
 ########################################################################
 
 ##### WEATHER THROUGHOUT SEASON #####
-weather <- read_excel("Data/2017/Finse_weather.xlsx")
+weather16 <- read_excel("Data/2016/Finse_weather_2016.xlsx")
 
-Weather <- weather %>% 
-  mutate(precipitation = as.numeric(precipitation)) %>%
+Weather16 <- weather16 %>% 
+  rename("date" = "Dato", "temperature" = "Middeltemperatur", "precipitation" = "Nedbør") %>% 
   mutate(doy = yday(date))
 
 
-########################################################################
+
+weather17 <- read_excel("Data/2017/Finse_weather.xlsx")
+
+Weather <- weather17 %>% 
+  mutate(precipitation = as.numeric(precipitation)) %>%
+  mutate(doy = yday(date)) %>% 
+  bind_rows(Weather16)
+
+
+########################bind_rows()################################################
 
 
 ### JOIN 2016 and 2017 DATA
