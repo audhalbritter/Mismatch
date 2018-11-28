@@ -37,6 +37,7 @@ vignettes/*.pdf
 *.dat
 *.RData.Tmp1
 *.txt
+*.DS_Store
 
 #rasters & shapefiles
 *.bil
