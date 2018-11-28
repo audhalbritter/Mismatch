@@ -28,7 +28,8 @@ all <- dat.pol %>%
 
 
 # Function to plot points and curves for predicted values and data
-combined <- function(dat){dat %>% 
+combined <- function(dat){
+  dat %>% 
     ggplot(aes(x = doy, y = value, color = variable)) +
     geom_point() +
     geom_line(aes(y = pred, color = variable)) +
