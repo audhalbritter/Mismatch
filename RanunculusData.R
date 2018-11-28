@@ -235,3 +235,4 @@ pollination2 <- pollination %>%
   mutate(flowering = ifelse(abs.diff > 3, NA, flower.sum)) %>% # could check how much different flowers are
   mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
+
