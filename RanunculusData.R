@@ -133,11 +133,11 @@ Date_snowmelt <- Date_snowmelt %>%
 
 ##### WEATHER THROUGHOUT SEASON #####
 weather16 <- read_excel("Data/2016/Finse_weather_2016.xlsx")
-
+colnames(weather16) <- iconv(colnames(weather16), "latin1", "ASCII", sub = "q")
+  
 Weather16 <- weather16 %>% 
-  rename("date" = "Dato", "temperature" = "Middeltemperatur", "precipitation" = "Nedbør") %>% 
+  rename("date" = "Dato", "temperature" = "Middeltemperatur", "precipitation" = "Nedbqqr") %>% 
   mutate(doy = yday(date))
-
 
 
 weather17 <- read_excel("Data/2017/Finse_weather.xlsx")
