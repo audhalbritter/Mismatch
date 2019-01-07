@@ -61,3 +61,23 @@ ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = log(Seed_mass), color = Stage
   geom_point() + 
   geom_smooth(method = "lm") + 
   facet_wrap(~ Year)
+
+# Lage plot med biomasse og antall ovule
+ggplot(Biomass, aes(x = Biomass, y = log(Ovule_number), color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year) #Hva forteller disse dataene meg? at det ikke er noen stor forskjell når det kommer til plantens biomasse og antall ovuler?
+
+#Model med random effects
+ModelOvule <- lme(log(Ovule_number) ~ Biomass*Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016)) #ser på 2016 dataene alene (gjøre egen for 2017)
+summary(ModelOvule)
+
+# Lage plot med biomasse og antall frø
+ggplot(Biomass, aes(x = Biomass, y = log(Seed_number), color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year) #Her ser det ut som om biomassen har noe å si for antall ovuler. Sett bort i fra L som er litt rar, så virker det som at det er flere frø jo mer biomasse planten har.
+
+#Model med random effects
+ModelSeed <- lme(log(Seed_number) ~ Biomass*Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016)) #ser på 2016 dataene alene (gjøre egen for 2017)
+summary(ModelSeed)
