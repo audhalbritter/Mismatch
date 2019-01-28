@@ -31,7 +31,7 @@ tidy(Model) %>%
 
 ############################################
 #Graf med biomasse og frøvekt. Ser på hvert år hver for seg
-ggplot(Biomass, aes(x = Biomass, y = log(Seed_mass), color = Stage)) + 
+ggplot(Biomass, aes(x = Biomass, y = log(Seed_mass), color = Stage))+ 
   geom_point() + 
   geom_smooth(method = "lm") + 
   facet_wrap(~ Year)
