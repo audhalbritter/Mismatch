@@ -98,7 +98,10 @@ AIC(ModelSeedOvule0, ModelSeedOvule1, ModelSeedOvule2, ModelSeedOvule3)
 
 ##################################################
 #Graf med antall frø/(antall frø + antall ovule) og hvordan biomasse påvirker her. Hvordan lage denne grafen?
-#ggplot(Biomass, aes(x = Biomass, y = Tot_ovule, color = Stage)) +
+Biomass1 <- Biomass %>% 
+  mutate(NY = Seed_number / Tot_ovule)
+
+#ggplot(Biomass, aes(x = Biomass, y = NY, color = Stage)) +
   #geom_point() +
   #geom_smooth(method = "lm") +
   #facet_wrap(~ Year)
