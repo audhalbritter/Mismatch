@@ -145,7 +145,8 @@ weather17 <- read_excel("Data/2017/Finse_weather.xlsx")
 Weather <- weather17 %>% 
   mutate(precipitation = as.numeric(precipitation)) %>%
   mutate(doy = yday(date)) %>% 
-  bind_rows(Weather16)
+  bind_rows(Weather16) %>% 
+  mutate(tempAboveZero = ifelse(temperature > 0, temperature, 0))
 
 
 ########################bind_rows()################################################
@@ -228,8 +229,17 @@ Biomass <- biomass16 %>%
   filter(!is.na(Stage)) %>% 
   mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")),
          Tot_Ovule = Seed_number + Ovule_number,
-         Seed_potential = Seed_number / Tot_Ovule)
+         Seed_potential = Seed_number / Tot_Ovule) %>% 
+  # Convert dates to doy
+  mutate(Date1 = yday(Date1),
+         Date2 = yday(Date2),
+         Date3 = yday(Date3),
+         Collected = yday(Collected),
+         TimeToRipe = Collected - Date1)
 
+
+Weather %>% 
+  select(doy, tempAboveZero)
 
 ########################################################################
 ### JOIN PHENOLOGY AND POLLINATION ####
@@ -246,5 +256,4 @@ pollination2 <- pollination %>%
   mutate(flowering = ifelse(abs.diff > 3, NA, flower.sum)) %>% # could check how much different flowers are
   mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
-
 
