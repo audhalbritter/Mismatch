@@ -257,3 +257,13 @@ pollination2 <- pollination %>%
   mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
 
+
+# Mean total number of flowers and insect visits per
+MeanFlyFlower <- pollination2 %>% 
+  group_by(year.poll, siteID) %>% 
+  summarise(MeanFlowers = mean(tot.flowers),
+            MeanVisit = mean(std.fly)) %>% 
+  rename(Year = year.poll)
+
+Biomass <- Biomass %>% 
+  left_join(MeanFlyFlower, by = c("Year", "siteID"))
