@@ -226,7 +226,9 @@ Biomass17 <- Biomass17 %>%
 Biomass <- biomass16 %>% 
   bind_rows(Biomass17) %>% 
   filter(!is.na(Stage)) %>% 
-  mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")))
+  mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")),
+         Ovule_number = Seed_number + Ovule_number,
+         Seed_potential = Seed_number / Ovule_number)
 
 
 ########################################################################
@@ -244,15 +246,5 @@ pollination2 <- pollination %>%
   mutate(flowering = ifelse(abs.diff > 3, NA, flower.sum)) %>% # could check how much different flowers are
   mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
-
-
-
-
-##################################
-######## Biomasse analyser #######
-Biomass <- read_excel("Data/Biomass1617.xlsx") %>% 
-  mutate(BlockID = as.factor(paste(Stage, Site, Block))) %>% #gir block en mer presis id
-  mutate(Seed_mass = as.numeric(Seed_mass),
-         Biomass = as.numeric(Biomass))
 
 
