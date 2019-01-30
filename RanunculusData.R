@@ -245,3 +245,14 @@ pollination2 <- pollination %>%
   mutate(tot.flowers = flower.sum*2*area) %>% # added new column: total number of flowers pr. area (based on mean flowers)
   mutate(std.fly = fly/tot.flowers) # standardize insect observation by fl per area
 
+
+
+
+##################################
+######## Biomasse analyser #######
+Biomass <- read_excel("Data/Biomass1617.xlsx") %>% 
+  mutate(BlockID = as.factor(paste(Stage, Site, Block))) %>% #gir block en mer presis id
+  mutate(Seed_mass = as.numeric(Seed_mass),
+         Biomass = as.numeric(Biomass))
+
+
