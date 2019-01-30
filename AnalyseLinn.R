@@ -8,11 +8,6 @@ library("dplyr")
 
 ##################################
 ######## Biomasse analyser #######
-Biomass <- read_excel("Biomass1617.xlsx") %>% 
-  mutate(BlockID = as.factor(paste(Stage, Site, Block))) %>% #gir block en mer presis id
-  mutate(Seed_mass = as.numeric(Seed_mass)) %>%
-  mutate(Biomass = as.numeric(Biomass))
-  
  
 #Antar dataene er normalfordelte. Her har vi en lm uten random effects
 Biomass
@@ -97,9 +92,7 @@ AIC(ModelSeedOvule0, ModelSeedOvule1, ModelSeedOvule2, ModelSeedOvule3, ModelSee
 #Model 3 har lavest AIC verdi og derfor den beste modellen. 
 
 ##################################################
-#Graf med antall frø/(antall frø + antall ovule) og hvordan biomasse påvirker her. Hvordan lage denne grafen?
-Biomass1 <- Biomass %>% 
-  mutate(Seed_potential = Seed_number / Tot_ovule)
+#Graf med Seed_potential = antall frø/(antall frø + antall ovule) og hvordan biomasse påvirker her.
 
 ggplot(Biomass1, aes(x = Biomass, y = Seed_potential, color = Stage)) +
   geom_point() +
@@ -107,11 +100,11 @@ ggplot(Biomass1, aes(x = Biomass, y = Seed_potential, color = Stage)) +
   facet_wrap(~ Year)
 
 #Hvilken model med random effects passer best
-ModelSeedset0 <- glmer(Seed_number ~ 1 + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset1 <- glmer(Seed_number ~ Biomass + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset2 <- glmer(Seed_number ~ Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset3 <- glmer(Seed_number ~ Biomass+Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset4 <- glmer(Seed_number ~ Biomass*Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelSeedset0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelSeedset1 <- glmer(Seed_potential ~ Biomass + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelSeedset2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelSeedset3 <- glmer(Seed_potential ~ Biomass+Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelSeedset4 <- glmer(Seed_potential ~ Biomass*Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
 summary(ModelSeedset2)
 
 # OBS! får ikke helt til å fjerne NA fra Tot_ovule i linje 15, må fikse dette for å kjøre formel
