@@ -50,14 +50,15 @@ ggplot(Biomass, aes(x = Biomass, y = Ovule_number, color = Stage)) +
   facet_wrap(~ Year)
 
 #Model med random effects. Endret kode fra biomasse x frøvekt. Kan kun bruke lme om dataene er normalfordelt, men må bruke glmer her. Legger inn family = poisson siden det er telledata. Også endret form på random effekts, fordi "random = ~ 1 | BlockID" ikke fungerer med "glmer".
-ModelOvule0 <- glmer(Ovule_number ~ Biomass + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelOvule1 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelOvule2 <- glmer(Ovule_number ~ Biomass+Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelOvule3 <- glmer(Ovule_number ~ Biomass*Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelOvule0 <- glmer(Ovule_number ~ 1 + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016))
+ModelOvule1 <- glmer(Ovule_number ~ Biomass + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelOvule2 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelOvule3 <- glmer(Ovule_number ~ Biomass+Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
+ModelOvule4 <- glmer(Ovule_number ~ Biomass*Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
 summary(ModelOvule2)
 
 #Kan gjøre AIC test her for å se hvilken modell som er den beste
-AIC(ModelOvule0, ModelOvule1, ModelOvule2, ModelOvule3)
+AIC(ModelOvule0, ModelOvule1, ModelOvule2, ModelOvule3, ModelOvule4)
 #Modell 2 har lavest verdi og er den som forklarer mest, slik at både biomasse og stage har noe å si for resultatene (?). Både antall ovule og biomasse er signifikante
 
 #######################################################
