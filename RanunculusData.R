@@ -227,8 +227,8 @@ Biomass <- biomass16 %>%
   bind_rows(Biomass17) %>% 
   filter(!is.na(Stage)) %>% 
   mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")),
-         Ovule_number = Seed_number + Ovule_number,
-         Seed_potential = Seed_number / Ovule_number)
+         Tot_Ovule = Seed_number + Ovule_number,
+         Seed_potential = Seed_number / Tot_Ovule)
 
 
 ########################################################################
