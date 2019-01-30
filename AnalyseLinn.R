@@ -8,11 +8,11 @@ library("dplyr")
 
 ##################################
 ######## Biomasse analyser #######
-Biomass <- read.csv("Biomass1617.csv", sep=";") %>% 
+Biomass <- read_excel("Biomass1617.xlsx") %>% 
   mutate(BlockID = as.factor(paste(Stage, Site, Block))) %>% #gir block en mer presis id
-  filter(!is.na(Seed_mass)) %>%  #fjerner alle NA 
-  filter(!is.na(Biomass)) %>%
-  #filter(!is.na(Tot_ovule)) #fjerner alle NA
+  mutate(Seed_mass = as.numeric(Seed_mass)) %>%
+  mutate(Biomass = as.numeric(Biomass))
+  
  
   
 
@@ -49,16 +49,16 @@ ggplot(Biomass, aes(x = Biomass, y = Ovule_number, color = Stage)) +
   geom_smooth(method = "lm") +
   facet_wrap(~ Year)
 
-#Model med random effects. Endret kode fra biomasse x frøvekt. Kan kun bruke lme om dataene er normalfordelt, men må bruke glme her. Legger inn family = poisson siden det er telledata. Også endret form på random effekts, fordi "random = ~ 1 | BlockID" ikke fungerer med "glmer".
+#Model med random effects. Endret kode fra biomasse x frøvekt. Kan kun bruke lme om dataene er normalfordelt, men må bruke glmer her. Legger inn family = poisson siden det er telledata. Også endret form på random effekts, fordi "random = ~ 1 | BlockID" ikke fungerer med "glmer".
 ModelOvule0 <- glmer(Ovule_number ~ Biomass + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
 ModelOvule1 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
 ModelOvule2 <- glmer(Ovule_number ~ Biomass+Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
 ModelOvule3 <- glmer(Ovule_number ~ Biomass*Stage + (1 | BlockID), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-summary(ModelOvule0)
+summary(ModelOvule2)
 
 #Kan gjøre AIC test her for å se hvilken modell som er den beste
 AIC(ModelOvule0, ModelOvule1, ModelOvule2, ModelOvule3)
-#Modell 0 har lavest verdi og er den som forklarer mest, altså biomassen sier mer om antall ovuler enn stage og intraksjon mellom biomasse og stage (?). Både antall ovule og biomasse er signifikante
+#Modell 2 har lavest verdi og er den som forklarer mest, slik at både biomasse og stage har noe å si for resultatene (?). Både antall ovule og biomasse er signifikante
 
 #######################################################
 # Graf med biomasse og antall frø. Ser på år hver for seg
@@ -93,7 +93,7 @@ summary(ModelSeedOvule2)
 
 #AIC test
 AIC(ModelSeedOvule0, ModelSeedOvule1, ModelSeedOvule2, ModelSeedOvule3)
-#Model 2 har lavest AIC verdi og derfor den beste modellen. Den forteller oss at stage L har høyest verdi av frø+ovule. 
+#Model 2 har lavest AIC verdi og derfor den beste modellen. 
 
 ##################################################
 #Graf med antall frø/(antall frø + antall ovule) og hvordan biomasse påvirker her. Hvordan lage denne grafen?
@@ -132,6 +132,7 @@ BiomassResult <- Biomass %>%
 tidy(BiomassResult, fit) %>% 
   mutate(estimate = exp(estimate))
 
+#####################################################################
 
 ####### Besøksraten og frøvekt ####
 #Pollination 2 = besøksraten regnet ut fra RanunculusData.R
@@ -143,6 +144,7 @@ MeanVisitRate <- pollination2 %>%
   left_join(Biomass, by = c("Year", "Stage", "Site" )) %>% 
   filter(mean.visit.rate != Inf)
 
+#Når jeg kjører koden ovenfor får jeg error: Error in left_join_impl(x, y, by_x, by_y, aux_x, aux_y, na_matches): Can't join on 'Site' x 'Site' because of incompatible types (integer / factor)
 
 hist(log(Biomass$Seed_mass), breaks = 20)
 Model <- lm(log(Seed_mass) ~ mean.visit.rate*Stage, data = MeanVisitRate %>% filter(Year == 2017)) 
@@ -154,5 +156,25 @@ ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = log(Seed_mass), color = Stage
   geom_smooth(method = "lm") + 
   facet_wrap(~ Year)
 
+ModelSeedmassvisit <- lm(log(Seed_mass) ~ mean.visit.rate*Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016))
+summary(MSeedmassvisit)
+
+#Formel ovenfor, får ikke til å stemme, bare error. Hvilken familie? Bruke lme, lmer, glmer?
+
+#Siden korrelasjonsmodellen fortalte oss at antall frø og ovule og frømasse er greit korrelert, ikke lage og se på modeller med antall frø ~ besøksrate * stage (+ e), og antall ovule ~ besøksrate * stage (+ e)? 
+
+##################################################
+## Fenologi
+#Graf med antall blomster x frø, for å se om det er konkurranse ller fasilitering
+ggplot(phenology, aes(x = log(Seed_mass), y = fl.sqm, color = Stage)) + #Få seed_mass inn i phenologi datasettet? Eller omvendt. Gruppere dette by sideID
+  #geom_point() +
+  #geom_smooth(method = "lm") +
+  #facet_wrap(~ Year)
+
+#Modeller med random effects
+#ModelPhenSeedM <- glmer(fl.sqm ~ Seed_mass + (1 | BlockID), family = "poisson", data = phenology %>% filter(Year == 2016))
+  
+##############################################3
+## Pollen limitation? Mulig å lage en graf her med y=PL (et tall mellom 0 og 1), og x=antall blomster (per block eller site?). Pollen limitation index = 1- (Po/Ps), hvor Po er prosent frøsett på åpne blomster, og Ps er prosent frøsett på pollen supplementerte blomster.
 
 
