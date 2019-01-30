@@ -35,9 +35,20 @@ Temperature <- Temperature[!(Temperature$stage == "mid" & Temperature$date < as.
 Temperature <- Temperature[!(Temperature$stage == "mid" & Temperature$site %in% c("05", "06") & Temperature$date < as.POSIXct(ymd_hms("2016-07-02 12:00:00"))), ] # for site 5 and 6 2.7 at 12:00
 Temperature <- Temperature[!(Temperature$stage == "late" & Temperature$date < as.POSIXct(ymd("2016-07-15"))), ] # remove < 15.7
   
+
+Temperature <- Temperature %>% 
+  mutate(stage = plyr::mapvalues(stage, c("early", "late", "mid"), c("E", "L", "M")),
+         siteID = paste(stage, site, " "))
+
+
 # SAVE THE FILE
-setwd("/Users/audhalbritter/Dropbox/mismatch/Analysis/Mismatch")
-save(Temperature, file = "TemperatureiButton.RData")
+#setwd("/Users/audhalbritter/Dropbox/mismatch/Analysis/Mismatch")
+save(Temperature, file = "Data/TemperatureiButton.RData")
+
+Temperature %>% 
+  mutate(day = day(date))
+  group_by(day, siteID) %>% 
+  summarise(dailyMean = mean(value))
 
 
 ggplot(Temperature, aes(x = date, y = temperature)) +
