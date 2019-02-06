@@ -3,7 +3,6 @@ source("RanunculusData.R")
 library("lme4")
 library("broom")
 library("nlme")
-library("dplyr")
 
 
 ##################################
