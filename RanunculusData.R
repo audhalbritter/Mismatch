@@ -267,3 +267,18 @@ MeanFlyFlower <- pollination2 %>%
 
 Biomass <- Biomass %>% 
   left_join(MeanFlyFlower, by = c("Year", "siteID"))
+
+
+
+### Cumulative temperature for pollinated plants
+Weather2 <- Weather %>% 
+  select(doy, tempAboveZero)
+
+Biomass %>% 
+  select(Year, siteID, Block, Treatment, Biomass, Seed_mass, Seed_number, Ovule_number, Tot_Ovule, Seed_potential, Date1, Collected, MeanFlowers, MeanVisit) %>% 
+  mutate(start_date)
+  filter(!is.na(Date1))
+  crossing(Weather2) %>%
+  filter(date >= start, date <=end) %>%
+  group_by(n) %>%
+  summarise(sum(temp))
