@@ -3,7 +3,7 @@ source("RanunculusData.R")
 library("lme4")
 library("broom")
 library("nlme")
-
+library("ggpubr")
 
 ##################################
 ######## Biomasse analyser #######
@@ -29,9 +29,17 @@ ggplot(Biomass, aes(x = Biomass, y = log(Seed_mass), color = Stage))+
   facet_wrap(~ Year)
 
 #Model med random effects
-ModelBiomass <- lme(log(Seed_mass) ~ Biomass*Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016)) #ser på 2016 dataene alene (gjøre egen for 2017)
-summary(ModelBiomass)
+ModelBiomass0 <- lme(log(Seed_mass) ~ 1, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016)) #ser på 2016 dataene alene (gjøre egen for 2017)
+ModelBiomass1 <- lme(log(Seed_mass) ~ Biomass, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
+ModelBiomass2 <- lme(log(Seed_mass) ~ Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
+ModelBiomass3 <- lme(log(Seed_mass) ~ Biomass+Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
+ModelBiomass4 <- lme(log(Seed_mass) ~ Biomass*Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
+summary(ModelBiomass4)
 
+#Gjør AIC test
+AIC(ModelBiomass0, ModelBiomass1, ModelBiomass2, ModelBiomass3, ModelBiomass4)
+
+#Får opp warning message. Men ModelBiomass 4 har lavest AIC verdi.
 #Seed mass x Biomass forteller oss at det er sammenheng mellom biomasse og frøvekt. Jo mer biomasse jo flere frø.
 
 ########################################
@@ -106,7 +114,7 @@ ModelSeedset3 <- glmer(Seed_potential ~ Biomass+Stage + (1 | BlockID) + offset(l
 ModelSeedset4 <- glmer(Seed_potential ~ Biomass*Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
 summary(ModelSeedset2)
 
-# OBS! får ikke helt til å fjerne NA fra Tot_ovule i linje 15, må fikse dette for å kjøre formel
+# OBS! finner ikke seed potential
 
 AIC(ModelSeedset0, ModelSeedset1, ModelSeedset2, ModelSeedset3, ModelSeedset4)
 #Modell 2 har lavest verdi. Resultatene viser at stage M har flest frø produsert ut i fra mulig utgangspunkt, og stage L har lavest mengde produsert frø. Både stage E og L er signifikante.
@@ -175,7 +183,7 @@ summary(ModelSeedmassvisit)
 
 ##################################################
 ## Fenologi
-#Graf med antall blomster x frø, for å se om det er konkurranse ller fasilitering
+#Plot med antall blomster x frø, for å se om det er konkurranse ller fasilitering
 ggplot(phenology, aes(x = log(Seed_mass), y = fl.sqm, color = Stage)) + #Få seed_mass inn i phenologi datasettet? Eller omvendt. Gruppere dette by sideID
   #geom_point() +
   #geom_smooth(method = "lm") +
@@ -185,6 +193,54 @@ ggplot(phenology, aes(x = log(Seed_mass), y = fl.sqm, color = Stage)) + #Få see
 #ModelPhenSeedM <- glmer(fl.sqm ~ Seed_mass + (1 | BlockID), family = "poisson", data = phenology %>% filter(Year == 2016))
   
 ##############################################3
-## Pollen limitation? Mulig å lage en graf her med y=PL (et tall mellom 0 og 1), og x=antall blomster (per block eller site?). Pollen limitation index = 1- (Po/Ps), hvor Po er prosent frøsett på åpne blomster, og Ps er prosent frøsett på pollen supplementerte blomster.
+## Pollen limitation? seedset x pollen treatment. Hvor seedset er enten #seeds/achene eller seed mass, og pollentreatment er HP eller C.
+  
+#Graf.
+
+ggplot(Biomass1, aes(x = Treatment, y = Seed_potential, color = Stage)) +
+  geom_boxplot() +
+  facet_wrap(~ Stage)
 
 
+#Hvilken model med random effects passer best
+ModelPL0 <- lme(Seed_potential ~ 1, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL1 <- lme(Seed_potential ~ Treatment, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL2 <- lme(Seed_potential ~ Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL3 <- lme(Seed_potential ~ Treatment+Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL4 <- lme(Seed_potential ~ Treatment*Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+summary(ModelPL2)
+
+#AIC
+AIC(ModelPL0, ModelPL1, ModelPL2, ModelPL3, ModelPL4)
+#Får opp warning message. Men PodelPL2 passer best. Altså PL varierer lags stage (seed potential synker fra E til L), og ikke med treatment? Ergo ingen PL?
+
+#Look at differences in seed number and seed weight.
+ggplot(Biomass1, aes(x = Seed_number, y = Seed_mass, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Stage)
+
+SeedsetPlot <- ggscatter(Biomass1, x = "Seed_number", y = "Seed_mass",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "pearson",
+          color = "dark green",
+          facet.by = c("Treatment", "Stage"),
+          xlab = "Number of seeds", ylab = "Average achene weight")
+
+SeedsetPlot$Stage = factor(SeedsetPlot$Stage, levels = c("E", "M", "L", "F")) #hvordan endre rekkefølge på facet????
+
+SeedPL <- cor.test(Biomass1$Seed_number, Biomass1$Seed_mass, method = "pearson") 
+SeedPL
+
+
+
+#Hvilken model med random effects passer best
+ModelPL0 <- lme(Seed_potential ~ 1, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL1 <- lme(Seed_potential ~ Treatment, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL2 <- lme(Seed_potential ~ Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL3 <- lme(Seed_potential ~ Treatment+Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+ModelPL4 <- lme(Seed_potential ~ Treatment*Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
+summary(ModelPL2)
+
+#AIC
+AIC(ModelPL0, ModelPL1, ModelPL2, ModelPL3, ModelPL4)
