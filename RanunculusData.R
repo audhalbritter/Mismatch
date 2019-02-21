@@ -220,9 +220,20 @@ Biomass17 <- read_excel("Data/2017/Biomass.xlsx", col_types = c("text", "text", 
 ### BY SITE ###
 Biomass17 <- Biomass17 %>% 
   rename(Treatment = Plant_type, Date1 = `Date  1`, Date2 = `Date 2`, Date3 = `Date 3`, Name1 = `Name 1`, Name2 = `Name 2`, Name3 = `Name 3`, siteID = `Site`) %>%
-  mutate(Treatment = ifelse(Treatment %in% c("C"), "Control", "Pollinated")) %>% 
-  mutate(Site = substr(siteID, 3, 4)) %>% 
-  mutate(Year = 2017)
+  mutate(Treatment = ifelse(Treatment %in% c("C"), "Control", "Pollinated"),
+         Site = substr(siteID, 3, 4),
+         Year = 2017) %>% 
+  # Fix wrong dates
+  mutate(Date1 = if_else(siteID == "E 01" & Block == "b" & Plant == "HP1", ymd_hms("2017-07-23", truncated = 3), Date1),
+         Date2 = if_else(siteID == "E 01" & Block == "b"& Plant == "HP1", ymd_hms("2017-07-25", truncated = 3), Date2),
+         Date1 = if_else(siteID == "E 01" & Block == "b" & Plant == "HP2", ymd_hms("2017-07-25", truncated = 3), Date1),
+         Date2 = if_else(siteID == "E 01" & Block == "b"& Plant == "HP2", ymd_hms("2017-07-26", truncated = 3), Date2),
+         Date1 = if_else(siteID == "E 03" & Block == "c" & Plant == "HP1", ymd_hms("2017-07-25", truncated = 3), Date1),
+         Date1 = if_else(siteID == "E 03" & Block == "c" & Plant == "HP2", ymd_hms("2017-07-25", truncated = 3), Date1),
+         Date1 = if_else(siteID == "E 07" & Block == "a" & Plant == "HP2", ymd_hms("2017-07-26", truncated = 3), Date1),
+         Date1 = if_else(siteID == "M 04" & Block == "a" & Plant == "HP1", ymd_hms("2017-07-25", truncated = 3), Date1),
+         Collected = if_else(siteID == "E 04" & Block == "d" & Plant == "HP2", ymd_hms("2017-08-18", truncated = 3), Collected))
+
 
 Biomass <- biomass16 %>% 
   bind_rows(Biomass17) %>% 
@@ -239,8 +250,6 @@ Biomass <- biomass16 %>%
          TimeToRipe = Collected - Date1)
 
 
-Weather %>% 
-  select(doy, tempAboveZero)
 
 ########################################################################
 ### JOIN PHENOLOGY AND POLLINATION ####
@@ -276,17 +285,22 @@ Biomass <- Biomass %>%
 Weather2 <- Weather %>% 
   select(doy, tempAboveZero)
 
+Weather2 %>% 
+  filter(doy > 193, doy < 228) %>% 
+  group_by() %>% 
+  summarise(sum(tempAboveZero))
+
 Period <- Biomass %>% 
   filter(Treatment == "Pollinated") %>% 
-  group_by(Year, Stage) %>% 
+  group_by(Year, BlockID) %>% 
   summarise(MinDate = min(Date1, na.rm = TRUE), MaxDate = max(Collected, na.rm = TRUE))
-
+  
 
 WeatherAndBiomass <- Biomass %>% 
   select(Year, Stage, siteID, BlockID, Plant, Treatment, Biomass, Seed_mass, Seed_number, Ovule_number, Tot_Ovule, Seed_potential, MeanFlowers, MeanVisit) %>% 
-  left_join(Period, by = c("Stage", "Year")) %>% 
+  left_join(Period, by = c("BlockID", "Year")) %>% 
   crossing(Weather2) %>%
-  filter(doy >= MinDate, doy <= MaxDate) %>%
-  group_by(Year, Stage, siteID, BlockID, Plant, Treatment) %>%
-  summarise(Cumsum = sum(tempAboveZero)) %>% 
-  left_join(Biomass, by = c("Year", "Stage", "siteID", "BlockID", "Plant", "Treatment"))
+  filter(doy > MinDate, doy < MaxDate) %>%
+  group_by(Year, BlockID, Plant) %>%
+  summarise(CumTemp = sum(tempAboveZero, na.rm = TRUE)) %>% 
+  left_join(Biomass, by = c("Year", "BlockID", "Plant"))
