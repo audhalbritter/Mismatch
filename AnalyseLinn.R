@@ -23,18 +23,19 @@ tidy(Model) %>%
 
 ############################################
 #Graf med biomasse og frøvekt. Ser på hvert år hver for seg
-ggplot(Biomass, aes(x = Biomass, y = log(Seed_mass), color = Stage))+ 
+Plot1 <- ggplot(Biomass, aes(x = Biomass, y = log(Seed_mass), color = Stage))+ 
   geom_point() + 
   geom_smooth(method = "lm") + 
   facet_wrap(~ Year)
+ggsave(Plot1, filename = "Figurer/Plot1.jpeg", height = 6, width = 8)
 
 #Model med random effects
-ModelBiomass0 <- lme(log(Seed_mass) ~ 1, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016)) #ser på 2016 dataene alene (gjøre egen for 2017)
-ModelBiomass1 <- lme(log(Seed_mass) ~ Biomass, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
-ModelBiomass2 <- lme(log(Seed_mass) ~ Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
-ModelBiomass3 <- lme(log(Seed_mass) ~ Biomass+Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
-ModelBiomass4 <- lme(log(Seed_mass) ~ Biomass*Stage, random = ~ 1 | BlockID, data = Biomass %>% filter(Year == 2016))
-summary(ModelBiomass4)
+ModelBiomass0 <- lmer(log(Seed_mass) ~ 1 + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE) 
+ModelBiomass1 <- lmer(log(Seed_mass) ~ Biomass + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+ModelBiomass2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+ModelBiomass3 <- lmer(log(Seed_mass) ~ Biomass+Stage + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+ModelBiomass4 <- lmer(log(Seed_mass) ~ Biomass*Stage + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+summary(ModelBiomass3)
 
 #Gjør AIC test
 AIC(ModelBiomass0, ModelBiomass1, ModelBiomass2, ModelBiomass3, ModelBiomass4)
@@ -63,10 +64,12 @@ AIC(ModelOvule0, ModelOvule1, ModelOvule2, ModelOvule3, ModelOvule4)
 
 #######################################################
 # Graf med biomasse og antall frø. Ser på år hver for seg
-ggplot(Biomass, aes(x = Biomass, y = Seed_number, color = Stage)) +
+Plot2 <- ggplot(Biomass, aes(x = Biomass, y = Seed_number, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_wrap(~ Year) 
+  facet_wrap(~ Year)
+ggsave(Plot2, filename = "Figurer/Plot2.jpeg", height = 6, width = 8)
+
 
 #Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
 ModelSeed0 <- glmer(Seed_number ~ 1 + (1 | BlockID), family = "poisson", data = Biomass %>% filter(Year == 2016))
@@ -74,10 +77,12 @@ ModelSeed1 <- glmer(Seed_number ~ Biomass + (1 | BlockID), family = "poisson", d
 ModelSeed2 <- glmer(Seed_number ~ Stage + (1 | BlockID), family = "poisson", data = Biomass %>% filter(Year == 2016))
 ModelSeed3 <- glmer(Seed_number ~ Biomass+Stage + (1 | BlockID), family = "poisson", data = Biomass %>% filter(Year == 2016))
 ModelSeed4 <- glmer(Seed_number ~ Biomass*Stage + (1 | BlockID), family = "poisson", data = Biomass %>% filter(Year == 2016))
-summary(ModelSeed4)
+summary(ModelSeed3)
 
 AIC(ModelSeed0, ModelSeed1, ModelSeed2, ModelSeed3, ModelSeed4)
-#Model nr 4 er den som har lavest verdi, slik at interaksjonen mellom biomasse og stage forklarer best resultatet vi ser (?).
+#Model nr 3 er beste modellen, slik at interaksjonen mellom biomasse og stage forklarer best resultatet vi ser (?).
+
+
 
 ##################################################
 #Graf med antall frø + antall ovule og hvordan biomasse påvirker her
@@ -147,7 +152,7 @@ MeanVisitRate <- pollination2 %>%
   summarise(mean.visit.rate = mean(std.fly), mean.tot.flowers = mean(tot.flowers)) %>% 
   rename(Year = year.poll, Stage = stage, Site = site) %>% 
   left_join(Biomass, by = c("Year", "Stage", "Site" )) %>% 
-  filter(mean.visit.rate != Inf)
+  filter(mean.visit.rate != Inf, !is.na (Seed_mass))
 
 #Når jeg kjører koden ovenfor får jeg error: Error in left_join_impl(x, y, by_x, by_y, aux_x, aux_y, na_matches): Can't join on 'Site' x 'Site' because of incompatible types (integer / factor)
 
@@ -164,22 +169,59 @@ summary(Model2)
 tidy(Model2) %>%
   mutate(estimate = exp(estimate))
 
+#Data med mean.visist.rate x seed_mass
 
-ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = log(Seed_mass), color = Stage)) + 
+Plot3 <- MeanVisitRate %>% 
+  filter(Year == 2016) %>% 
+  ggplot(aes(x = mean.visit.rate, y = Seed_mass, color = Stage)) + 
   geom_point() + 
-  geom_smooth(method = "lm") + 
-  facet_wrap(~ Year)
+  geom_smooth(method = "lm") 
+  
+ggsave(Plot3, filename = "Figurer/Plot3.jpeg", height = 6, width = 8)
 
-ModelSeedmassvisit0 <- lme(log(Seed_mass) ~ 1, random = ~ 1 | BlockID, data = MeanVisitRate %>% filter(Year == 2016))
-ModelSeedmassvisit1 <- lme(log(Seed_mass) ~ mean.visit.rate, random = ~ 1 | BlockID, data = MeanVisitRate %>% filter(Year == 2016))
-ModelSeedmassvisit2 <- lme(log(Seed_mass) ~ Stage, random = ~ 1 | BlockID, data = MeanVisitRate %>% filter(Year == 2016))
-ModelSeedmassvisit3 <- lme(log(Seed_mass) ~ mean.visit.rate+Stage, random = ~ 1 | BlockID, data = MeanVisitRate %>% filter(Year == 2016))
-ModelSeedmassvisit4 <- lme(log(Seed_mass) ~ mean.visit.rate*Stage, random = ~ 1 | BlockID, data = MeanVisitRate %>% filter(Year == 2016))
-summary(ModelSeedmassvisit)
+ModelSeedmassvisit0 <- lmer(log(Seed_mass) ~ 1 + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit1 <- lmer(log(Seed_mass) ~ mean.visit.rate + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit3 <- lmer(log(Seed_mass) ~ mean.visit.rate+Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit4 <- lmer(log(Seed_mass) ~ mean.visit.rate*Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+summary(ModelSeedmassvisit2)
+
+AIC(ModelSeedmassvisit0, ModelSeedmassvisit1, ModelSeedmassvisit2, ModelSeedmassvisit3, ModelSeedmassvisit4)
+#Seedmassvisit 4 er den beste modellen. 
+
+# Graf med visitation rate og antall frø. Ser på år hver for seg
+Plot4 <- ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = Seed_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year) 
+ggsave(Plot4, filename = "Figurer/Plot4.jpeg", height = 6, width = 8)
+
+#Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
+ModelSeednumbervisit0 <- glmer(Seed_number ~ 1 + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelSeednumbervisit1 <- glmer(Seed_number ~ mean.visit.rate + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelSeednumbervisit2 <- glmer(Seed_number ~ Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelSeednumbervisit3 <- glmer(Seed_number ~ mean.visit.rate+Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelSeednumbervisit4 <- glmer(Seed_number ~ mean.visit.rate*Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+summary(ModelSeednumbervisit2)
+
+AIC(ModelSeednumbervisit0, ModelSeednumbervisit1, ModelSeednumbervisit2, ModelSeednumbervisit3, ModelSeednumbervisit4)
+
+# Graf med visitation rate og antall ovuler. Ser på år hver for seg
+ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = Ovule_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year) 
 
 
+#Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
+ModelOvulenumbervisit0 <- glmer(Ovule_number ~ 1 + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelOvulenumbervisit1 <- glmer(Ovule_number ~ mean.visit.rate + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelOvulenumbervisit2 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelOvulenumbervisit3 <- glmer(Ovule_number ~ mean.visit.rate+Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelOvulenumbervisit4 <- glmer(Ovule_number ~ mean.visit.rate*Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+summary(ModelSeednumbervisit2)
 
-#Siden korrelasjonsmodellen fortalte oss at antall frø og ovule og frømasse er greit korrelert, ikke lage og se på modeller med antall frø ~ besøksrate * stage (+ e), og antall ovule ~ besøksrate * stage (+ e)? 
+AIC(ModelOvulenumbervisit0, ModelOvulenumbervisit1, ModelOvulenumbervisit2, ModelOvulenumbervisit3, ModelOvulenumbervisit4)
 
 ##################################################
 ## Fenologi
@@ -243,3 +285,60 @@ summary(ModelPL2)
 
 #AIC
 AIC(ModelPL0, ModelPL1, ModelPL2, ModelPL3, ModelPL4)
+
+##############################
+#Temperatur og frødata
+
+#Graf med temperatur og frøvekt. Ser på hvert år hver for seg
+ggplot(WeatherAndBiomass, aes(x = CumTemp, y = log(Seed_mass), color = Stage))+ 
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~ Year)
+ggsave(Plot, filename = "Figurer/Plot.jpeg", height = 6, width = 8)
+
+#Model med random effects
+ModelCumTempSM0 <- lme(log(Seed_mass) ~ 1, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017)) #ser på 2016 dataene alene (gjøre egen for 2017)
+ModelCumTempSM1 <- lme(log(Seed_mass) ~ CumTemp, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
+ModelCumTempSM2 <- lme(log(Seed_mass) ~ Stage, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
+ModelCumTempSM3 <- lme(log(Seed_mass) ~ CumTemp+Stage, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
+ModelCumTempSM4 <- lme(log(Seed_mass) ~ CumTemp*Stage, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
+summary(ModelCumTempSM2)
+
+#Gjør AIC test
+AIC(ModelCumTempSM0, ModelCumTempSM1, ModelCumTempSM2, ModelCumTempSM3, ModelCumTempSM4)
+
+# Graf med temperatur og antall frø. Ser på år hver for seg
+ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Seed_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+
+
+
+#Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
+ModelCumTempSN0 <- glmer(Seed_number ~ 1 + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+ModelCumTempSN1 <- glmer(Seed_number ~ CumTemp.cen + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+ModelCumTempSN2 <- glmer(Seed_number ~ Stage + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+ModelCumTempSN3 <- glmer(Seed_number ~ CumTemp.cen+Stage + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+ModelCumTempSN4 <- glmer(Seed_number ~ CumTemp.cen*Stage + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+summary(ModelCumTempSN4)
+
+AIC(ModelCumTempSN0, ModelCumTempSN1, ModelCumTempSN2, ModelCumTempSN3, ModelCumTempSN4)
+
+
+#Graf med temperatur og antall ovuler
+ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Ovule_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+
+
+ModelCumTempON0 <- glmer(Ovule_number ~ 1 + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+ModelCumTempON1 <- glmer(Ovule_number ~ CumTemp + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempON2 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempON3 <- glmer(Ovule_number ~ CumTemp+Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempONe4 <- glmer(Ovule_number ~ CumTemp*Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+summary(ModelOvule3)
+
+#Kan gjøre AIC test her for å se hvilken modell som er den beste
+AIC(ModelOvule0, ModelOvule1, ModelOvule2, ModelOvule3, ModelOvule4)
