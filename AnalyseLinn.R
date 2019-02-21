@@ -126,7 +126,7 @@ cor.test(Biomass$Seed_mass, Biomass$Seed_number)
 
 plot(Biomass$Seed_mass, Biomass$Seed_number)
 plot(Biomass$Seed_mass, Biomass$Ovule_number)
-plot(Biomass$Seed_mass, Biomass$Tot_ovule) 
+plot(Biomass$Seed_mass, Biomass$Tot_Ovule) 
 #Virker som antall frø og frømasse er greit korrelert (?), men ikke når vi ser på antall ovuler og frømasse, eller tot ovule
 
 ################################################################################
