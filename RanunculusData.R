@@ -229,7 +229,8 @@ Biomass <- biomass16 %>%
   filter(!is.na(Stage)) %>% 
   mutate(Stage = factor(Stage, levels = c("F", "E", "M", "L")),
          Tot_Ovule = Seed_number + Ovule_number,
-         Seed_potential = Seed_number / Tot_Ovule) %>% 
+         Seed_potential = Seed_number / Tot_Ovule, 
+         BlockID = paste(Stage, Site, Block, sep = " ")) %>% 
   # Convert dates to doy
   mutate(Date1 = yday(Date1),
          Date2 = yday(Date2),
