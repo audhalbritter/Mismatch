@@ -267,7 +267,8 @@ MeanFlyFlower <- pollination2 %>%
   rename(Year = year.poll)
 
 Biomass <- Biomass %>% 
-  left_join(MeanFlyFlower, by = c("Year", "siteID"))
+  left_join(MeanFlyFlower, by = c("Year", "siteID")) %>%
+  filter(!is.na (Seed_mass))
 
 
 
