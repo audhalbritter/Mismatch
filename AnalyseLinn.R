@@ -107,17 +107,17 @@ ggplot(Biomass1, aes(x = Biomass, y = Seed_potential, color = Stage)) +
   facet_wrap(~ Year)
 
 #Hvilken model med random effects passer best
-ModelSeedset0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset1 <- glmer(Seed_potential ~ Biomass + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset3 <- glmer(Seed_potential ~ Biomass+Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-ModelSeedset4 <- glmer(Seed_potential ~ Biomass*Stage + (1 | BlockID) + offset(log(Tot_ovule)), family="poisson", data = Biomass %>% filter(Year == 2016)) 
-summary(ModelSeedset2)
+ModelSeedset0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelSeedset1 <- glmer(Seed_potential ~ Biomass + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelSeedset2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelSeedset3 <- glmer(Seed_potential ~ Biomass+Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelSeedset4 <- glmer(Seed_potential ~ Biomass*Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+summary(ModelSeedset3)
 
 # OBS! finner ikke seed potential
 
 AIC(ModelSeedset0, ModelSeedset1, ModelSeedset2, ModelSeedset3, ModelSeedset4)
-#Modell 2 har lavest verdi. Resultatene viser at stage M har flest frø produsert ut i fra mulig utgangspunkt, og stage L har lavest mengde produsert frø. Både stage E og L er signifikante.
+#Modell 3 har lavest verdi. 
 
 ###################################################
 #Korrelasjonstester, går det ann å bare bruke seedmass, eller har antall frø og ovuler noe å si?
@@ -177,17 +177,25 @@ ModelSeedmassvisit3 <- lme(log(Seed_mass) ~ mean.visit.rate+Stage, random = ~ 1 
 ModelSeedmassvisit4 <- lme(log(Seed_mass) ~ mean.visit.rate*Stage, random = ~ 1 | BlockID, data = MeanVisitRate %>% filter(Year == 2016))
 summary(ModelSeedmassvisit)
 
-#Formel ovenfor, får ikke til å stemme, bare error. 
+
 
 #Siden korrelasjonsmodellen fortalte oss at antall frø og ovule og frømasse er greit korrelert, ikke lage og se på modeller med antall frø ~ besøksrate * stage (+ e), og antall ovule ~ besøksrate * stage (+ e)? 
 
 ##################################################
 ## Fenologi
 #Plot med antall blomster x frø, for å se om det er konkurranse ller fasilitering
-ggplot(phenology, aes(x = log(Seed_mass), y = fl.sqm, color = Stage)) + #Få seed_mass inn i phenologi datasettet? Eller omvendt. Gruppere dette by sideID
-  #geom_point() +
-  #geom_smooth(method = "lm") +
-  #facet_wrap(~ Year)
+#Kjøre for mean.visit.rate og mean.tot.flowers. Se på begge år, og om 2017 året virkelig har en negativ trend for F og E. Trenger ikke log transformere her.
+MeanVisitRate %>%
+  ggplot(aes(x = mean.visit.rate, y = Seed_mass, color = Stage)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_grid(~ Year, scales ="free")
+
+MeanVisitRate %>%
+  ggplot(aes(x = mean.tot.flowers, y = Seed_mass, color = Stage)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_grid(~ Year, scales ="free")
 
 #Modeller med random effects
 #ModelPhenSeedM <- glmer(fl.sqm ~ Seed_mass + (1 | BlockID), family = "poisson", data = phenology %>% filter(Year == 2016))
@@ -215,23 +223,14 @@ AIC(ModelPL0, ModelPL1, ModelPL2, ModelPL3, ModelPL4)
 #Får opp warning message. Men PodelPL2 passer best. Altså PL varierer lags stage (seed potential synker fra E til L), og ikke med treatment? Ergo ingen PL?
 
 #Look at differences in seed number and seed weight.
-ggplot(Biomass1, aes(x = Seed_number, y = Seed_mass, color = Stage)) +
+Biomass %>% 
+  filter(Stage != "F") %>%
+  ggplot(aes(x = Seed_number, y = Seed_mass, color = Treatment)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_wrap(~ Stage)
+  facet_grid(~ Stage)
 
-SeedsetPlot <- ggscatter(Biomass1, x = "Seed_number", y = "Seed_mass",
-          add = "reg.line", conf.int = TRUE,
-          cor.coef = TRUE, cor.method = "pearson",
-          color = "dark green",
-          facet.by = c("Treatment", "Stage"),
-          xlab = "Number of seeds", ylab = "Average achene weight")
-
-SeedsetPlot$Stage = factor(SeedsetPlot$Stage, levels = c("E", "M", "L", "F")) #hvordan endre rekkefølge på facet????
-
-SeedPL <- cor.test(Biomass1$Seed_number, Biomass1$Seed_mass, method = "pearson") 
-SeedPL
-
+#Kan også gjøre dette for x = Biomass, og y = Seedmass. Hvor vi ser at store planter produserer mer frø, men ikke i L. 
 
 
 #Hvilken model med random effects passer best
