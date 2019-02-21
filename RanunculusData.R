@@ -201,12 +201,12 @@ head(biomass16)
 
 biomass16 <- biomass16 %>% 
   fill(Plot) %>% # fills empty plot names with value above
-  rename(Treatment = Plant, Biomass = `Vekt biomasse`, Seed_mass = `Vekt frø`, Seed_number = `Antall frø`, Ovule_number = `Antall ovuler`, Date1 = `Dato pollinert 1`, Date2 = `Dato pollinert 2`, Date3 = `Dato pollinert 3`, Name1 = Hvem1, Name2 = Hvem2, Name3 = Hvem3, Collected = `Dato samlet frø`, NameCollected = Hvem4) %>%
+  rename(Biomass = `Vekt biomasse`, Seed_mass = `Vekt frø`, Seed_number = `Antall frø`, Ovule_number = `Antall ovuler`, Date1 = `Dato pollinert 1`, Date2 = `Dato pollinert 2`, Date3 = `Dato pollinert 3`, Name1 = Hvem1, Name2 = Hvem2, Name3 = Hvem3, Collected = `Dato samlet frø`, NameCollected = Hvem4) %>%
   mutate(Stage = gsub("^([A-Z]).*", "\\1", Plot)) %>% 
   mutate(Site = gsub(".(\\d+).", "\\1", Plot)) %>% 
   mutate(Site = ifelse(nchar(Site) < 2, paste(0, Site, sep = ""), Site)) %>% # add a zero to Site
   mutate(Block = gsub(".*([a-z])$", "\\1", Plot)) %>% 
-  mutate(Treatment = ifelse(Treatment %in% c("C1", "C2"), "Control", "Pollinated")) %>%
+  mutate(Treatment = ifelse(Plant %in% c("C1", "C2"), "Control", "Pollinated")) %>%
   mutate(Biomass = as.numeric(Biomass), Seed_mass = as.numeric(Seed_mass)) %>%
   select(-Plot) %>% 
   mutate(Year = 2016) %>% 
@@ -276,11 +276,17 @@ Biomass <- Biomass %>%
 Weather2 <- Weather %>% 
   select(doy, tempAboveZero)
 
-Biomass %>% 
-  select(Year, siteID, Block, Treatment, Biomass, Seed_mass, Seed_number, Ovule_number, Tot_Ovule, Seed_potential, Date1, Collected, MeanFlowers, MeanVisit) %>% 
-  mutate(start_date)
-  filter(!is.na(Date1))
+Period <- Biomass %>% 
+  filter(Treatment == "Pollinated") %>% 
+  group_by(Year, Stage) %>% 
+  summarise(MinDate = min(Date1, na.rm = TRUE), MaxDate = max(Collected, na.rm = TRUE))
+
+
+WeatherAndBiomass <- Biomass %>% 
+  select(Year, Stage, siteID, BlockID, Plant, Treatment, Biomass, Seed_mass, Seed_number, Ovule_number, Tot_Ovule, Seed_potential, MeanFlowers, MeanVisit) %>% 
+  left_join(Period, by = c("Stage", "Year")) %>% 
   crossing(Weather2) %>%
-  filter(date >= start, date <=end) %>%
-  group_by(n) %>%
-  summarise(sum(temp))
+  filter(doy >= MinDate, doy <= MaxDate) %>%
+  group_by(Year, Stage, siteID, BlockID, Plant, Treatment) %>%
+  summarise(Cumsum = sum(tempAboveZero)) %>% 
+  left_join(Biomass, by = c("Year", "Stage", "siteID", "BlockID", "Plant", "Treatment"))
