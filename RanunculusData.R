@@ -303,4 +303,5 @@ WeatherAndBiomass <- Biomass %>%
   filter(doy > MinDate, doy < MaxDate) %>%
   group_by(Year, BlockID, Plant) %>%
   summarise(CumTemp = sum(tempAboveZero, na.rm = TRUE)) %>% 
-  left_join(Biomass, by = c("Year", "BlockID", "Plant"))
+  left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
+  mutate(CumTemp.cen = scale(CumTemp, scale = FALSE))
