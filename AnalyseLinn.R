@@ -3,7 +3,7 @@ source("RanunculusData.R")
 library("lme4")
 library("broom")
 library("nlme")
-library("ggpubr")
+
 
 ##################################
 ######## Biomasse analyser #######
@@ -135,13 +135,6 @@ plot(Biomass$Seed_mass, Biomass$Ovule_number)
 plot(Biomass$Seed_mass, Biomass$Tot_Ovule) 
 #Virker som antall frø og frømasse er greit korrelert (?), men ikke når vi ser på antall ovuler og frømasse, eller tot ovule
 
-################################################################################
-# Funket ikke helt, ser på senere
-BiomassResult <- Biomass %>% 
-  group_by(Year) %>% 
-  do(fit = lme(Seed_mass ~ Biomass*Stage + (1 | BlockID), data = .))
-tidy(BiomassResult, fit) %>% 
-  mutate(estimate = exp(estimate))
 
 #####################################################################
 
@@ -219,76 +212,198 @@ ModelOvulenumbervisit4 <- glmer(Ovule_number ~ mean.visit.rate*Stage + (1 | Bloc
 summary(ModelSeednumbervisit3)
 
 AIC(ModelOvulenumbervisit0, ModelOvulenumbervisit1, ModelOvulenumbervisit2, ModelOvulenumbervisit3, ModelOvulenumbervisit4)
+#Mulig å bruke dette?
+
+# Graf med visitation rate og antall frø + ovuler. Ser på år hver for seg
+MeanvisitationrateAndAchenenumber <- ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = Tot_Ovule, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year) 
+ggsave(MeanvisitationrateAndAchenenumber, filename = "Figurer/MeanvisitationrateAndAchenenumber.jpeg", height = 6, width = 8)
+
+
+#Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
+ModelAchenenumbervisit0 <- glmer(Tot_Ovule ~ 1 + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelAchenenumbervisit1 <- glmer(Tot_Ovule ~ mean.visit.rate + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelAchenenumbervisit2 <- glmer(Tot_Ovule ~ Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelAchenenumbervisit3 <- glmer(Tot_Ovule ~ mean.visit.rate+Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+ModelAchenenumbervisit4 <- glmer(Tot_Ovule ~ mean.visit.rate*Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+summary(ModelAchenenumbervisit1)
+
+AIC(ModelAchenenumbervisit0, ModelAchenenumbervisit1, ModelAchenenumbervisit2, ModelAchenenumbervisit3, ModelAchenenumbervisit4)
+#Mulig å bruke dette????
+
+# Graf med visitation rate og antall frø + ovuler. Ser på år hver for seg
+MeanvisitationrateAndSeedPotential <- ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = Seed_potential, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year) 
+ggsave(MeanvisitationrateAndSeedPotential, filename = "Figurer/MeanvisitationrateAndSeedPotential.jpeg", height = 6, width = 8)
+
+
+#Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
+ModelSeedpotvisit0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule)
+ModelSeedpotvisit1 <- glmer(Seed_potential ~ mean.visit.rate + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule)
+ModelSeedpotvisit2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule)
+ModelSeedpotvisit3 <- glmer(Seed_potential ~ mean.visit.rate+Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule)
+ModelSeedpotvisit4 <- glmer(Seed_potential ~ mean.visit.rate*Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule)
+summary(ModelSeedpotvisit3)
+
+AIC(ModelSeedpotvisit0, ModelSeedpotvisit1, ModelSeedpotvisit2, ModelSeedpotvisit3, ModelSeedpotvisit4)
+#Model 3 har lavest AIC
 
 ##################################################
 ## Fenologi
 #Plot med antall blomster x frø, for å se om det er konkurranse ller fasilitering
 #Kjøre for mean.visit.rate og mean.tot.flowers. Se på begge år, og om 2017 året virkelig har en negativ trend for F og E. Trenger ikke log transformere her.
-MeanVisitRate %>%
-  ggplot(aes(x = mean.visit.rate, y = Seed_mass, color = Stage)) + 
+
+#Fenologi og seed mass
+
+PhenologyAndSeedmass <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Seed_mass, color = Stage)) + 
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_grid(~ Year, scales ="free") #likt som tidligere, se modeller her
+    facet_wrap(~ Year)
+ggsave(PhenologyAndSeedmass, filename = "Figurer/PhenologyAndSeedmass.jpeg", height = 6, width = 8)
 
-
-MeanVisitRate %>%
-  ggplot(aes(x = mean.tot.flowers, y = Seed_mass, color = Stage)) + 
-  geom_point() +
-  geom_smooth(method = "lm") +
-  facet_grid(~ Year, scales ="free")
-
-PhenologySeedmass0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeedmass1 <- lmer(log(Seed_mass) ~ mean.visit.rate + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeedmass2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeedmass3 <- lmer(log(Seed_mass) ~ mean.visit.rate+Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeedmass4 <- lmer(log(Seed_mass) ~ mean.visit.rate*Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016))
+PhenologySeedmass0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
+PhenologySeedmass1 <- lmer(log(Seed_mass) ~ mean.tot.flowers + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
+PhenologySeedmass2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
+PhenologySeedmass3 <- lmer(log(Seed_mass) ~ mean.tot.flowers+Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
+PhenologySeedmass4 <- lmer(log(Seed_mass) ~ mean.tot.flowers*Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
 summary(PhenologySeedmass4)
 
 AIC(PhenologySeedmass0, PhenologySeedmass1, PhenologySeedmass2, PhenologySeedmass3, PhenologySeedmass4)
 #modell 4 for 2017 og 2016
 
-#Lage modeller med random effects
+#Fenologi og antall ovuler
+PhenologyAndOvulenumber <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Ovule_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(PhenologyAndOvulenumber, filename = "Figurer/PhenologyAndOvulenumber.jpeg", height = 6, width = 8)
 
-PhenologySeednumber0 <- glmer(Seed_number ~ 1 + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeednumber1 <- glmer(Seed_number ~ mean.visit.rate + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeednumber2 <- glmer(Seed_number ~ Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeednumber3 <- glmer(Seed_number ~ mean.visit.rate+Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
-PhenologySeednumber4 <- glmer(Seed_number ~ mean.visit.rate*Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
-summary(PhenologySeednumber2)
+PhenologyOvule0 <- glmer(Ovule_number ~ 1 + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016))
+PhenologyOvule1 <- glmer(Ovule_number ~ mean.tot.flowers + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+PhenologyOvule2 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+PhenologyOvule3 <- glmer(Ovule_number ~ mean.tot.flowers+Stage + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+PhenologyOvule4 <- glmer(Ovule_number ~ mean.tot.flowers*Stage + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+summary(PhenologyOvule3)
 
-AIC(PhenologySeednumber0, PhenologySeednumber1, PhenologySeednumber2, PhenologySeednumber3, PhenologySeednumber4)
+#AIC test
+AIC(PhenologyOvule0, PhenologyOvule1, PhenologyOvule2, PhenologyOvule3, PhenologyOvule4)
+#Modell 3 har lavest verdi
+
+#######################################################
+#Fenolgi og antall frø
+PhenologyAndSeedNumber <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Seed_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(PhenologyAndSeedNumber, filename = "Figurer/PhenologyAndSeedNumber.jpeg", height = 6, width = 8)
+
+PhenologySeed0 <- glmer(Seed_number ~ 1 + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016))
+PhenologySeed1 <- glmer(Seed_number ~ mean.tot.flowers + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+PhenologySeed2 <- glmer(Seed_number ~ Stage + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+PhenologySeed3 <- glmer(Seed_number ~ mean.tot.flowers+Stage + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+PhenologySeed4 <- glmer(Seed_number ~ mean.tot.flowers*Stage + (1 | BlockID), family="poisson", data = MeanVisitRate %>% filter(Year == 2016)) 
+summary(PhenologyOvule4)
+
+AIC(PhenologySeed0, PhenologySeed1, PhenologySeed2, PhenologySeed3, PhenologySeed4)
+#Model nr 4 er beste modellen
+
+
+
+##################################################
+#Fenologi og totalt antall achener
+PhenologyAndTotalachenes <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Seed_number + Ovule_number, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(PhenologyAndTotalachenes, filename = "Figurer/PhenologyAndTotalachenes.jpeg", height = 6, width = 8)
+
+#Modeller med random effects
+PhenologyAchene0<- glmer(Seed_number + Ovule_number ~ 1 + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+PhenologyAchene1 <- glmer(Seed_number + Ovule_number ~ mean.tot.flowers + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+PhenologyAchene2 <- glmer(Seed_number + Ovule_number ~ Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+PhenologyAchene3 <- glmer(Seed_number + Ovule_number ~ mean.tot.flowers+Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+PhenologyAchene4 <- glmer(Seed_number + Ovule_number ~ mean.tot.flowers*Stage + (1 | BlockID), family = "poisson", data = MeanVisitRate %>% filter(Year == 2016))
+summary(PhenologyAchene1)
+
+#AIC test
+AIC(PhenologyAchene0, PhenologyAchene1, PhenologyAchene2, PhenologyAchene3, PhenologyAchene4)
+#Model 3 har lavest AIC verdi og derfor den beste modellen. 
+
+##################################################
+#Frøpotensiale og fenologi
+
+PhenologyAndSeedpotential <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Seed_potential, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(PhenologyAndSeedpotential, filename = "Figurer/PhenologyAndSeedpotential.jpeg", height = 6, width = 8)
+
+#Hvilken model med random effects passer best
+PhenologySeedpot0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule) 
+PhenologySeedpot1 <- glmer(Seed_potential ~ mean.tot.flowers + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule) 
+PhenologySeedpot2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule) 
+PhenologySeedpot3 <- glmer(Seed_potential ~ mean.tot.flowers+Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule) 
+PhenologySeedpot4 <- glmer(Seed_potential ~ mean.tot.flowers*Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = MeanVisitRate %>% filter(Year == 2016), weights = Tot_Ovule) 
+summary(PhenologySeedpot3)
+
+
+AIC(PhenologySeedpot0, PhenologySeedpot1, PhenologySeedpot2, PhenologySeedpot3, PhenologySeedpot4)
+#Modell 3 har lavest verdi.
   
 ##############################################3
-## Pollen limitation? seedset x pollen treatment. Hvor seedset er enten #seeds/achene eller seed mass, og pollentreatment er HP eller C.
+## Pollen limitation? seedset x pollen treatment. Hvor seedset er enten seed potential eller seed mass, og pollentreatment er HP eller C.
   
-#Graf.
+#Seedpotential og PL
 
-ggplot(Biomass1, aes(x = Treatment, y = Seed_potential, color = Stage)) +
+PLAndSeedPot <- ggplot(Biomass, aes(x = Treatment, y = Seed_potential, color = Stage)) +
   geom_boxplot() +
   facet_wrap(~ Stage)
+ggsave(PLAndSeedPot, filename = "Figurer/PLAndSeedPot.jpeg", height = 6, width = 8)
 
 
-#Hvilken model med random effects passer best. ENDER TIL LMER
-ModelPL0 <- lme(Seed_potential ~ 1, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
-ModelPL1 <- lme(Seed_potential ~ Treatment, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
-ModelPL2 <- lme(Seed_potential ~ Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
-ModelPL3 <- lme(Seed_potential ~ Treatment+Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
-ModelPL4 <- lme(Seed_potential ~ Treatment*Stage, random = ~ 1 | BlockID, data = Biomass1 %>% filter(Year == 2016))
-summary(ModelPL2)
+#Hvilken model med random effects passer best
+PLSeedPot0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+PLSeedPot1 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+PLSeedPot2 <- glmer(Seed_potential ~ Treatment + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+PLSeedPot3 <- glmer(Seed_potential ~ Stage+Treatment + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+#PLSeedPot4 <- glmer(Seed_potential ~ Stage*Treatment + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+# Klarer ikke kjøre koden over, variabler ikke mulige å bruke her?
+summary(PLSeedPot3)
 
 #AIC
-AIC(ModelPL0, ModelPL1, ModelPL2, ModelPL3, ModelPL4)
+AIC(PLSeedPot0, PLSeedPot1, PLSeedPot2, PLSeedPot3) #PLSeedPot4)
 
+
+
+#Seed mass og PL
+PLAndSeedmass <- ggplot(Biomass, aes(x = Treatment, y = Seed_mass, color = Stage)) +
+  geom_boxplot() +
+  facet_wrap(Year ~ Stage)
+ggsave(PLAndSeedmass, filename = "Figurer/PLAndSeedmass.jpeg", height = 6, width = 8)
+
+PLSeedmass0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+PLSeedmass1 <- lmer(log(Seed_mass) ~ Treatment + (1 | BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+PLSeedmass2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+PLSeedmass3 <- lmer(log(Seed_mass) ~ Treatment+Stage + (1 | BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+PLSeedmass4 <- lmer(log(Seed_mass) ~ Treatment*Stage + (1 | BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+summary(PLSeedmass2)
+
+AIC(PLSeedmass0, PLSeedmass1, PLSeedmass2, PLSeedmass3, PLSeedmass4)
+#Model 2 i 2016 og 2017
 
 #Look at differences in seed number and seed weight.
-Biomass %>% 
-  filter(Stage != "F") %>%
-  ggplot(aes(x = Seed_number, y = Seed_mass, color = Treatment)) +
+SeednumberAndSeedweight <- ggplot(Biomass, aes(x = Seed_number, y = Seed_mass, color = Treatment)) +
   geom_point() +
   geom_smooth(method = "lm") +
   facet_grid(~ Stage)
+ggsave(SeednumberAndSeedweight, filename = "Figurer/SeednumberAndSeedweight.jpeg", height = 6, width = 8)
+ # filter(Stage != "F") få inn stage koden
 
-#Kan også gjøre dette for x = Biomass, og y = Seedmass. Hvor vi ser at store planter produserer mer frø, men ikke i L. 
+ 
 
 
 #Hvilken model med random effects passer best. ENDRE KODE!
