@@ -283,12 +283,12 @@ Biomass <- Biomass %>%
 
 ### Cumulative temperature for pollinated plants
 Weather2 <- Weather %>% 
-  select(doy, tempAboveZero)
+  select(doy, tempAboveZero, precipitation)
 
 Weather2 %>% 
   filter(doy > 193, doy < 228) %>% 
   group_by() %>% 
-  summarise(sum(tempAboveZero))
+  summarise(sum(tempAboveZero), sum(precipitation))
 
 Period <- Biomass %>% 
   filter(Treatment == "Pollinated") %>% 
@@ -302,6 +302,8 @@ WeatherAndBiomass <- Biomass %>%
   crossing(Weather2) %>%
   filter(doy > MinDate, doy < MaxDate) %>%
   group_by(Year, BlockID, Plant) %>%
-  summarise(CumTemp = sum(tempAboveZero, na.rm = TRUE)) %>% 
+  summarise(CumTemp = sum(tempAboveZero, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
   left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
   mutate(CumTemp.cen = scale(CumTemp, scale = FALSE))
+
+
