@@ -371,7 +371,7 @@ PLSeedPot1 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovul
 PLSeedPot2 <- glmer(Seed_potential ~ Treatment + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
 PLSeedPot3 <- glmer(Seed_potential ~ Stage+Treatment + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
 #PLSeedPot4 <- glmer(Seed_potential ~ Stage*Treatment + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = Biomass %>% filter(Year == 2016), weights = Tot_Ovule) 
-# Klarer ikke kjøre koden over, variabler ikke mulige å bruke her?
+# Klarer ikke kjøre koden over PLSeedPot4, variabler ikke mulige å bruke her?
 summary(PLSeedPot3)
 
 #AIC
@@ -395,81 +395,135 @@ summary(PLSeedmass2)
 AIC(PLSeedmass0, PLSeedmass1, PLSeedmass2, PLSeedmass3, PLSeedmass4)
 #Model 2 i 2016 og 2017
 
-#Look at differences in seed number and seed weight.
+#Look at differences in seed number and seed weight med treatment
 SeednumberAndSeedweight <- ggplot(Biomass, aes(x = Seed_number, y = Seed_mass, color = Treatment)) +
   geom_point() +
   geom_smooth(method = "lm") +
   facet_grid(~ Stage)
+  
 ggsave(SeednumberAndSeedweight, filename = "Figurer/SeednumberAndSeedweight.jpeg", height = 6, width = 8)
- # filter(Stage != "F") få inn stage koden
+ # filter(Stage != "F") får ikke til å filtrere ut stage F
 
  
 
-
-#Hvilken model med random effects passer best. ENDRE KODE!
-ModelSNSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = Biomass %>% filter(Year == 2016))
-ModelSNSM1 <- lmer(log(Seed_mass) ~ Treatment + (1 | BlockID), data = Biomass %>% filter(Year == 2016))
-ModelSNSM2 <- lmer(log(Seed_mass) ~ Seed_number + (1 | BlockID), data = Biomass1 %>% filter(Year == 2016))
-ModelSNSM3 <- lmer(log(Seed_mass) ~ Treatment+Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016))
-ModelSNSM4 <- lmer(log(Seed_mass) ~ Treatment*Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016))
+#Hvilken model med random effects passer best.
+ModelSNSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSM1 <- lmer(log(Seed_mass) ~ Treatment + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSM2 <- lmer(log(Seed_mass) ~ Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSM3 <- lmer(log(Seed_mass) ~ Treatment+Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSM4 <- lmer(log(Seed_mass) ~ Treatment*Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
 summary(ModelSNSM2)
 
 #AIC
 AIC(ModelSNSM0, ModelSNSM1, ModelSNSM2, ModelSNSM3, ModelSNSM4)
+#Seed mass blir forklart av seed number, altså ikke om den er håndpollinert eller ikke
+
+#Seed mass x seed number med stage
+SeednumberAndSeedweightStage <- ggplot(Biomass, aes(x = Seed_number, y = Seed_mass, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") 
+
+#Hvilken model med random effects passer best. 
+ModelSNSMStage0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSMStage1 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSMStage2 <- lmer(log(Seed_mass) ~ Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSMStage3 <- lmer(log(Seed_mass) ~ Stage+Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelSNSMStage4 <- lmer(log(Seed_mass) ~ Stage*Seed_number + (1 | BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+summary(ModelSNSMStage4)
+
+#AIC
+AIC(ModelSNSMStage0, ModelSNSMStage1, ModelSNSMStage2, ModelSNSMStage3, ModelSNSMStage4)
+#Sier dette oss noe?
 
 ##############################
 #Temperatur og frødata
 
 #Graf med temperatur og frøvekt. Ser på hvert år hver for seg
-ggplot(WeatherAndBiomass, aes(x = CumTemp, y = log(Seed_mass), color = Stage))+ 
+TemperatureSeedmass <- ggplot(WeatherAndBiomass, aes(x = CumTemp, y = log(Seed_mass), color = Stage))+ 
   geom_point() + 
   geom_smooth(method = "lm") + 
   facet_wrap(~ Year)
-ggsave(Plot, filename = "Figurer/Plot.jpeg", height = 6, width = 8)
+ggsave(TemperatureSeedmass, filename = "Figurer/TemperatureSeedmass.jpeg", height = 6, width = 8)
 
 #Model med random effects
-ModelCumTempSM0 <- lme(log(Seed_mass) ~ 1, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017)) #ser på 2016 dataene alene (gjøre egen for 2017)
-ModelCumTempSM1 <- lme(log(Seed_mass) ~ CumTemp, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
-ModelCumTempSM2 <- lme(log(Seed_mass) ~ Stage, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
-ModelCumTempSM3 <- lme(log(Seed_mass) ~ CumTemp+Stage, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
-ModelCumTempSM4 <- lme(log(Seed_mass) ~ CumTemp*Stage, random = ~ 1 | BlockID, data = WeatherAndBiomass %>% filter(Year == 2017))
-summary(ModelCumTempSM2)
+ModelCumTempSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE) 
+ModelCumTempSM1 <- lmer(log(Seed_mass) ~ CumTemp + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumTempSM2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumTempSM3 <- lmer(log(Seed_mass) ~ CumTemp+Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumTempSM4 <- lmer(log(Seed_mass) ~ CumTemp*Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+summary(ModelCumTempSM3)
 
 #Gjør AIC test
 AIC(ModelCumTempSM0, ModelCumTempSM1, ModelCumTempSM2, ModelCumTempSM3, ModelCumTempSM4)
 
-# Graf med temperatur og antall frø. Ser på år hver for seg
-ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Seed_number, color = Stage)) +
+# Graf med temperatur og antall frø.
+TemperatureSeednumber <- ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Seed_number, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
   facet_wrap(~ Year)
+ggsave(TemperatureSeednumber, filename = "Figurer/TemperatureSeednumber.jpeg", height = 6, width = 8)
 
-
-
-#Kan gjøre AIC test her for å se om modellen vi valgte over er den beste (?)
 ModelCumTempSN0 <- glmer(Seed_number ~ 1 + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
 ModelCumTempSN1 <- glmer(Seed_number ~ CumTemp.cen + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
 ModelCumTempSN2 <- glmer(Seed_number ~ Stage + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
 ModelCumTempSN3 <- glmer(Seed_number ~ CumTemp.cen+Stage + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
 ModelCumTempSN4 <- glmer(Seed_number ~ CumTemp.cen*Stage + (1 | BlockID), family = "poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
-summary(ModelCumTempSN4)
+summary(ModelCumTempSN2)
 
 AIC(ModelCumTempSN0, ModelCumTempSN1, ModelCumTempSN2, ModelCumTempSN3, ModelCumTempSN4)
 
 
 #Graf med temperatur og antall ovuler
-ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Ovule_number, color = Stage)) +
+TemperatureOvulenumber <- ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Ovule_number, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
   facet_wrap(~ Year)
+ggsave(TemperatureOvulenumber, filename = "Figurer/TemperatureOvulenumber.jpeg", height = 6, width = 8)
 
 
 ModelCumTempON0 <- glmer(Ovule_number ~ 1 + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
-ModelCumTempON1 <- glmer(Ovule_number ~ CumTemp + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempON1 <- glmer(Ovule_number ~ CumTemp.cen + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
 ModelCumTempON2 <- glmer(Ovule_number ~ Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
-ModelCumTempON3 <- glmer(Ovule_number ~ CumTemp+Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
-ModelCumTempONe4 <- glmer(Ovule_number ~ CumTemp*Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
-summary(ModelOvule3)
+ModelCumTempON3 <- glmer(Ovule_number ~ CumTemp.cen+Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempON4 <- glmer(Ovule_number ~ CumTemp.cen*Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+summary(ModelCumTempON2)
 
 #Kan gjøre AIC test her for å se hvilken modell som er den beste
-AIC(ModelOvule0, ModelOvule1, ModelOvule2, ModelOvule3, ModelOvule4)
+AIC(ModelCumTempON0, ModelCumTempON1, ModelCumTempON2, ModelCumTempON3, ModelCumTempON4)
+
+#Graf med temperatur og seed potential
+TemperatureSeedpotential <- ggplot(WeatherAndBiomass, aes(x = CumTemp, y = Seed_potential, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(TemperatureSeedpotential, filename = "Figurer/TemperatureSeedpotential.jpeg", height = 6, width = 8)
+
+
+ModelCumTempSP0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule)
+ModelCumTempSP1 <- glmer(Seed_potential ~ CumTemp.cen + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelCumTempSP2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelCumTempSP3 <- glmer(Seed_potential ~ CumTemp.cen+Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelCumTempSP4 <- glmer(Seed_potential ~ CumTemp.cen*Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+summary(ModelCumTempSP2)
+
+#Kan gjøre AIC test her for å se hvilken modell som er den beste
+AIC(ModelCumTempSP0, ModelCumTempSP1, ModelCumTempSP2, ModelCumTempSP3, ModelCumTempSP4)
+
+
+#Graf med nedbør og frøvekt. Ser på hvert år hver for seg
+PrecipitationSeedmass <- ggplot(WeatherAndBiomass, aes(x = CumPrec, y = log(Seed_mass), color = Stage))+ 
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  facet_wrap(~ Year)
+ggsave(PrecipitationSeedmass, filename = "Figurer/PrecipitationSeedmass.jpeg", height = 6, width = 8)
+
+#Model med random effects
+ModelCumPrecSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE) 
+ModelCumPrecSM1 <- lmer(log(Seed_mass) ~ CumPrec + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumPrecSM2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumPrecSM3 <- lmer(log(Seed_mass) ~ CumPrec+Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumPrecSM4 <- lmer(log(Seed_mass) ~ CumPrec*Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+summary(ModelCumPrecSM3)
+
+#Kan gjøre AIC test her for å se hvilken modell som er den beste
+AIC(ModelCumPrecSM0, ModelCumPrecSM1, ModelCumPrecSM2, ModelCumPrecSM3, ModelCumPrecSM4)
