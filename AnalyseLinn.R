@@ -1,9 +1,9 @@
+setwd("C:/Users/linnv/Documents/Skole/UiO/Masteroppgave/R/Analyse/Mismatch")
 
 source("RanunculusData.R")
 library("lme4")
 library("broom")
 library("nlme")
-
 
 ##################################
 ######## Biomasse analyser #######
