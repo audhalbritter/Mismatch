@@ -1,4 +1,3 @@
-setwd("C:/Users/linnv/Documents/Skole/UiO/Masteroppgave/R/Analyse/Mismatch")
 
 source("RanunculusData.R")
 library("lme4")
@@ -30,11 +29,11 @@ BiomassAndSeedmass <- ggplot(Biomass, aes(x = Biomass, y = log(Seed_mass), color
 ggsave(BiomassAndSeedmass, filename = "Figurer/BiomassAndSeedmass.jpeg", height = 6, width = 8)
 
 #Model med random effects
-ModelBiomass0 <- lmer(log(Seed_mass) ~ 1 + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE) 
-ModelBiomass1 <- lmer(log(Seed_mass) ~ Biomass + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
-ModelBiomass2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
-ModelBiomass3 <- lmer(log(Seed_mass) ~ Biomass+Stage + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
-ModelBiomass4 <- lmer(log(Seed_mass) ~ Biomass*Stage + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
+ModelBiomass0 <- lmer(log(Seed_mass) ~ 1 + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE) 
+ModelBiomass1 <- lmer(log(Seed_mass) ~ Biomass + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+ModelBiomass2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+ModelBiomass3 <- lmer(log(Seed_mass) ~ Biomass+Stage + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
+ModelBiomass4 <- lmer(log(Seed_mass) ~ Biomass*Stage + (1|BlockID), data = Biomass %>% filter(Year == 2017), REML = FALSE)
 summary(ModelBiomass3)
 
 #Gjør AIC test
@@ -168,11 +167,11 @@ MeanvisitationrateAndSeedmass <- MeanVisitRate %>%
 ggsave(MeanvisitationrateAndSeedmass, filename = "Figurer/MeanvisitationrateAndSeedmass.jpeg", height = 6, width = 8)
 
 
-ModelSeedmassvisit0 <- lmer(log(Seed_mass) ~ 1 + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-ModelSeedmassvisit1 <- lmer(log(Seed_mass) ~ mean.visit.rate + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-ModelSeedmassvisit2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-ModelSeedmassvisit3 <- lmer(log(Seed_mass) ~ mean.visit.rate+Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-ModelSeedmassvisit4 <- lmer(log(Seed_mass) ~ mean.visit.rate*Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
+ModelSeedmassvisit0 <- lmer(log(Seed_mass) ~ 1 + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit1 <- lmer(log(Seed_mass) ~ mean.visit.rate + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit3 <- lmer(log(Seed_mass) ~ mean.visit.rate+Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+ModelSeedmassvisit4 <- lmer(log(Seed_mass) ~ mean.visit.rate*Stage + (1|BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
 summary(ModelSeedmassvisit2)
 
 AIC(ModelSeedmassvisit0, ModelSeedmassvisit1, ModelSeedmassvisit2, ModelSeedmassvisit3, ModelSeedmassvisit4)
@@ -214,7 +213,7 @@ summary(ModelSeednumbervisit3)
 AIC(ModelOvulenumbervisit0, ModelOvulenumbervisit1, ModelOvulenumbervisit2, ModelOvulenumbervisit3, ModelOvulenumbervisit4)
 #Mulig å bruke dette?
 
-# Graf med visitation rate og antall frø + ovuler. Ser på år hver for seg
+# Graf med visitation rate og seed+ovule. Ser på år hver for seg
 MeanvisitationrateAndAchenenumber <- ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = Tot_Ovule, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
@@ -233,7 +232,7 @@ summary(ModelAchenenumbervisit1)
 AIC(ModelAchenenumbervisit0, ModelAchenenumbervisit1, ModelAchenenumbervisit2, ModelAchenenumbervisit3, ModelAchenenumbervisit4)
 #Mulig å bruke dette????
 
-# Graf med visitation rate og antall frø + ovuler. Ser på år hver for seg
+# Graf med visitation rate og seed potential. Ser på år hver for seg
 MeanvisitationrateAndSeedPotential <- ggplot(MeanVisitRate, aes(x = mean.visit.rate, y = Seed_potential, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
@@ -265,11 +264,11 @@ PhenologyAndSeedmass <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Seed
     facet_wrap(~ Year)
 ggsave(PhenologyAndSeedmass, filename = "Figurer/PhenologyAndSeedmass.jpeg", height = 6, width = 8)
 
-PhenologySeedmass0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-PhenologySeedmass1 <- lmer(log(Seed_mass) ~ mean.tot.flowers + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-PhenologySeedmass2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-PhenologySeedmass3 <- lmer(log(Seed_mass) ~ mean.tot.flowers+Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
-PhenologySeedmass4 <- lmer(log(Seed_mass) ~ mean.tot.flowers*Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2016), REML = FALSE)
+PhenologySeedmass0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+PhenologySeedmass1 <- lmer(log(Seed_mass) ~ mean.tot.flowers + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+PhenologySeedmass2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+PhenologySeedmass3 <- lmer(log(Seed_mass) ~ mean.tot.flowers+Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
+PhenologySeedmass4 <- lmer(log(Seed_mass) ~ mean.tot.flowers*Stage + (1 | BlockID), data = MeanVisitRate %>% filter(Year == 2017), REML = FALSE)
 summary(PhenologySeedmass4)
 
 AIC(PhenologySeedmass0, PhenologySeedmass1, PhenologySeedmass2, PhenologySeedmass3, PhenologySeedmass4)
@@ -339,7 +338,7 @@ AIC(PhenologyAchene0, PhenologyAchene1, PhenologyAchene2, PhenologyAchene3, Phen
 PhenologyAndSeedpotential <- ggplot(MeanVisitRate, aes(x = mean.tot.flowers, y = Seed_potential, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  facet_wrap(~ Year)
+  facet_wrap(~ 2016)
 ggsave(PhenologyAndSeedpotential, filename = "Figurer/PhenologyAndSeedpotential.jpeg", height = 6, width = 8)
 
 #Hvilken model med random effects passer best
@@ -518,12 +517,30 @@ PrecipitationSeedmass <- ggplot(WeatherAndBiomass, aes(x = CumPrec, y = log(Seed
 ggsave(PrecipitationSeedmass, filename = "Figurer/PrecipitationSeedmass.jpeg", height = 6, width = 8)
 
 #Model med random effects
-ModelCumPrecSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE) 
-ModelCumPrecSM1 <- lmer(log(Seed_mass) ~ CumPrec + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
-ModelCumPrecSM2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
-ModelCumPrecSM3 <- lmer(log(Seed_mass) ~ CumPrec+Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
-ModelCumPrecSM4 <- lmer(log(Seed_mass) ~ CumPrec*Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
-summary(ModelCumPrecSM3)
+ModelCumPrecSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE) 
+ModelCumPrecSM1 <- lmer(log(Seed_mass) ~ CumPrec + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
+ModelCumPrecSM2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
+ModelCumPrecSM3 <- lmer(log(Seed_mass) ~ CumPrec+Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
+ModelCumPrecSM4 <- lmer(log(Seed_mass) ~ CumPrec*Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
+summary(ModelCumPrecSM4)
 
 #Kan gjøre AIC test her for å se hvilken modell som er den beste
 AIC(ModelCumPrecSM0, ModelCumPrecSM1, ModelCumPrecSM2, ModelCumPrecSM3, ModelCumPrecSM4)
+
+#Precipitation and seed potential
+PrecipitationSeedpotential <- ggplot(WeatherAndBiomass, aes(x = CumPrec, y = Seed_potential, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(PrecipitationSeedpotential, filename = "Figurer/TemperatureSeedpotential.jpeg", height = 6, width = 8)
+
+
+ModelCumPrecSP0 <- glmer(Seed_potential ~ 1 + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule)
+ModelCumPrecSP1 <- glmer(Seed_potential ~ CumPrec.cen + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelCumPrecSP2 <- glmer(Seed_potential ~ Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelCumPrecSP3 <- glmer(Seed_potential ~ CumPrec.cen+Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+ModelCumPrecSP4 <- glmer(Seed_potential ~ CumPrec.cen*Stage + (1 | BlockID) + offset(log(Tot_Ovule)), family="binomial", data = WeatherAndBiomass %>% filter(Year == 2016), weights = Tot_Ovule) 
+summary(ModelCumPrecSP2)
+
+#Kan gjøre AIC test her for å se hvilken modell som er den beste
+AIC(ModelCumPrecSP0, ModelCumPrecSP1, ModelCumPrecSP2, ModelCumPrecSP3, ModelCumPrecSP4)
