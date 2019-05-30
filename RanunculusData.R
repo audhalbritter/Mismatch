@@ -304,6 +304,7 @@ WeatherAndBiomass <- Biomass %>%
   group_by(Year, BlockID, Plant) %>%
   summarise(CumTemp = sum(tempAboveZero, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
   left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
-  mutate(CumTemp.cen = scale(CumTemp, scale = FALSE))
+  mutate(CumTemp.cen = scale(CumTemp, scale = FALSE)) %>%
+  mutate(CumPrec.cen = scale(CumPrec, scale = FALSE))
 
 
