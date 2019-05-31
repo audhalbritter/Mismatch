@@ -1,9 +1,13 @@
 
 source("RanunculusData.R")
 library("lme4")
-
 library("broom")
 library("nlme")
+
+install.packages("devtools")
+library("devtools")
+require(devtools)
+install_version("lme4", version = "1.1-10", repos = "http://cran.us.r-project.org")
 
 ##################################
 ######## Biomasse analyser #######
@@ -510,6 +514,7 @@ summary(ModelCumTempSP2)
 AIC(ModelCumTempSP0, ModelCumTempSP1, ModelCumTempSP2, ModelCumTempSP3, ModelCumTempSP4)
 
 
+
 #Graf med nedbør og frøvekt. Ser på hvert år hver for seg
 PrecipitationSeedmass <- ggplot(WeatherAndBiomass, aes(x = CumPrec, y = log(Seed_mass), color = Stage))+ 
   geom_point() + 
@@ -545,3 +550,10 @@ summary(ModelCumPrecSP2)
 
 #Kan gjøre AIC test her for å se hvilken modell som er den beste
 AIC(ModelCumPrecSP0, ModelCumPrecSP1, ModelCumPrecSP2, ModelCumPrecSP3, ModelCumPrecSP4)
+
+#calculate average time to ripe per year
+Biomass_TimeToRipe <- Biomass %>%
+  select(Year, Stage, TimeToRipe) %>%
+  group_by(Year, Stage) %>%
+  na.omit() %>%
+  summarize(averaged.TTR = mean(TimeToRipe))
