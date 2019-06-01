@@ -297,6 +297,9 @@ Period <- Biomass %>%
   summarise(MinDate = min(Date1, na.rm = TRUE), MaxDate = max(Collected, na.rm = TRUE))
   
 MASL <- read.csv("MASL.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+
+MeanVisitRate2 <- MeanVisitRate %>%
+  select(-mean.tot.flowers, -Plant, -Biomass, -Seed_mass, -Seed_number, -Ovule_number, -Remark, -Date1, -Name1, -Date2, -Name2, -Date3, -Name3, -Collected, -NameCollected, -Block, -Treatment, -Tot_Ovule, -Seed_potential, -BlockID, -TimeToRipe, -MeanFlowers, -MeanVisit)
   
 
 WeatherAndBiomass <- Biomass %>% 
@@ -312,7 +315,8 @@ WeatherAndBiomass <- Biomass %>%
   summarise(CumTemp = sum(tempAboveZeroAdi, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
   left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
   mutate(CumTemp.cen = scale(CumTemp, scale = FALSE)) %>%
-  mutate(CumPrec.cen = scale(CumPrec, scale = FALSE))
+  mutate(CumPrec.cen = scale(CumPrec, scale = FALSE)) %>%
+  left_join(MeanVisitRate2, by = c("siteID"))
   
 
 
