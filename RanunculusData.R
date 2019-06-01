@@ -282,8 +282,9 @@ Biomass <- Biomass %>%
 
 
 ### Cumulative temperature for pollinated plants
+
 Weather2 <- Weather %>% 
-  select(doy, tempAboveZero, precipitation)
+  select(doy, temperature, tempAboveZero, precipitation)
 
 Weather2 %>% 
   filter(doy > 193, doy < 228) %>% 
@@ -295,16 +296,24 @@ Period <- Biomass %>%
   group_by(Year, BlockID) %>% 
   summarise(MinDate = min(Date1, na.rm = TRUE), MaxDate = max(Collected, na.rm = TRUE))
   
+MASL <- read.csv("MASL.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
+  
 
 WeatherAndBiomass <- Biomass %>% 
   select(Year, Stage, siteID, BlockID, Plant, Treatment, Biomass, Seed_mass, Seed_number, Ovule_number, Tot_Ovule, Seed_potential, MeanFlowers, MeanVisit) %>% 
-  left_join(Period, by = c("BlockID", "Year")) %>% 
+  left_join(Period, by = c("BlockID", "Year")) %>%
+  left_join(MASL, by = c("siteID")) %>%
   crossing(Weather2) %>%
+  mutate(TempAdi = temperature - Adiabatic.temp) %>% #trekt i fra den adiabatiske temperaturen, mer korrekt temp pr site
+  mutate(tempAboveZeroAdi = ifelse(TempAdi > 0, TempAdi, 0)) %>%
+  select(-tempAboveZero) %>%
   filter(doy > MinDate, doy < MaxDate) %>%
   group_by(Year, BlockID, Plant) %>%
-  summarise(CumTemp = sum(tempAboveZero, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
+  summarise(CumTemp = sum(tempAboveZeroAdi, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
   left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
   mutate(CumTemp.cen = scale(CumTemp, scale = FALSE)) %>%
   mutate(CumPrec.cen = scale(CumPrec, scale = FALSE))
+  
+
 
 
