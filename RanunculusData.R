@@ -316,7 +316,9 @@ WeatherAndBiomass <- Biomass %>%
   left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
   mutate(CumTemp.cen = scale(CumTemp, scale = FALSE)) %>%
   mutate(CumPrec.cen = scale(CumPrec, scale = FALSE)) %>%
-  left_join(MeanVisitRate2, by = c("siteID"))
+  left_join(MeanVisitRate2, by = c("siteID")) %>%
+  select(-Year.y, -Stage.y, -Site.y) %>%
+  rename(Year = Year.x, Stage = Stage.x, Site = Site.x)
   
 
 
