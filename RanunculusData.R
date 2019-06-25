@@ -311,7 +311,7 @@ WeatherAndBiomass <- Biomass %>%
   mutate(tempAboveZeroAdi = ifelse(TempAdi > 0, TempAdi, 0)) %>%
   select(-tempAboveZero) %>%
   filter(doy > MinDate, doy < MaxDate) %>%
-  group_by(Year, BlockID, Plant) %>%
+  group_by(Year, BlockID, Plant, doy) %>% #added doy, but doesnt look correct
   summarise(CumTemp = sum(tempAboveZeroAdi, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
   left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
   mutate(CumTemp.cen = scale(CumTemp, scale = FALSE)) %>%
@@ -320,6 +320,4 @@ WeatherAndBiomass <- Biomass %>%
   select(-Year.y, -Stage.y, -Site.y) %>%
   rename(Year = Year.x, Stage = Stage.x, Site = Site.x)
   
-
-
 
