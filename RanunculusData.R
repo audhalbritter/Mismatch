@@ -298,6 +298,15 @@ Period <- Biomass %>%
   
 MASL <- read.csv("MASL.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
 
+# Pollination 2 = besøksraten regnet ut fra RanunculusData.R
+MeanVisitRate <- pollination2 %>% 
+  select(day.poll, year.poll, stage, site, tot.flowers, std.fly) %>% 
+  group_by(year.poll, stage, site) %>% 
+  summarise(mean.visit.rate = mean(std.fly), mean.tot.flowers = mean(tot.flowers)) %>% 
+  rename(Year = year.poll, Stage = stage, Site = site) %>% 
+  left_join(Biomass, by = c("Year", "Stage", "Site" )) %>% 
+  filter(mean.visit.rate != Inf, !is.na (Seed_mass))
+
 MeanVisitRate2 <- MeanVisitRate %>%
   select(-mean.tot.flowers, -Plant, -Biomass, -Seed_mass, -Seed_number, -Ovule_number, -Remark, -Date1, -Name1, -Date2, -Name2, -Date3, -Name3, -Collected, -NameCollected, -Block, -Treatment, -Tot_Ovule, -Seed_potential, -BlockID, -TimeToRipe, -MeanFlowers, -MeanVisit)
   
