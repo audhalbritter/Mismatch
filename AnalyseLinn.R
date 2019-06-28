@@ -143,6 +143,7 @@ plot(Biomass$Seed_mass, Biomass$Tot_Ovule)
 #####################################################################
 
 ####### Besøksraten og frøvekt ####
+### THIS IS NOT NEEDED HERE ANYMORE...!!!
 #Pollination 2 = besøksraten regnet ut fra RanunculusData.R
 MeanVisitRate <- pollination2 %>% 
   select(day.poll, year.poll, stage, site, tot.flowers, std.fly) %>% 
