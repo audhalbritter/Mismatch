@@ -10,19 +10,19 @@ options(na.action = "na.omit") # change back
 dat2016 <- WeatherAndBiomass %>% filter(Year == 2016,
                           MeanVisit != Inf) %>% 
   droplevels() %>% 
-  mutate(MeanVisit.cen = scale(MeanVisit, scale = FALSE),
-         Biomass.cen = scale(Biomass, scale = FALSE))
+  mutate(Biomass.cen = scale(Biomass, scale = FALSE))
 
 d1 <- as_tibble(x = scale(dat2016$CumTemp))
 d2 <- as_tibble(x = scale(dat2016$CumPrec))
 d3 <- as_tibble(x = scale(dat2016$MeanFlowers))
+d4 <- as_tibble(x = scale(dat2016$MeanVisit))
 
 dat2016 <- dat2016 %>% 
   select(-CumTemp.cen) %>% 
-  bind_cols(d1, d2, d3) %>% 
+  bind_cols(d1, d2, d3, d4) %>% 
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12)
 
-ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanFlower.cen + MeanVisit + CumTemp.cen + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = dat2016, weights = Tot_Ovule) 
+ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = dat2016, weights = Tot_Ovule) 
 
 plot(ModelSeedPotential2016)
 
