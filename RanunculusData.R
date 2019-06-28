@@ -298,19 +298,6 @@ Period <- Biomass %>%
   
 MASL <- read.csv("MASL.csv", header = TRUE, sep = ";", stringsAsFactors=FALSE)
 
-# Pollination 2 = besøksraten regnet ut fra RanunculusData.R
-MeanVisitRate <- pollination2 %>% 
-  select(day.poll, year.poll, stage, site, tot.flowers, std.fly) %>% 
-  group_by(year.poll, stage, site) %>% 
-  summarise(mean.visit.rate = mean(std.fly), mean.tot.flowers = mean(tot.flowers)) %>% 
-  rename(Year = year.poll, Stage = stage, Site = site) %>% 
-  left_join(Biomass, by = c("Year", "Stage", "Site" )) %>% 
-  filter(mean.visit.rate != Inf, !is.na (Seed_mass))
-
-MeanVisitRate2 <- MeanVisitRate %>%
-  select(-mean.tot.flowers, -Plant, -Biomass, -Seed_mass, -Seed_number, -Ovule_number, -Remark, -Date1, -Name1, -Date2, -Name2, -Date3, -Name3, -Collected, -NameCollected, -Block, -Treatment, -Tot_Ovule, -Seed_potential, -BlockID, -TimeToRipe, -MeanFlowers, -MeanVisit)
-  
-
 WeatherAndBiomass <- Biomass %>% 
   select(Year, Stage, siteID, BlockID, Plant, Treatment, Biomass, Seed_mass, Seed_number, Ovule_number, Tot_Ovule, Seed_potential, MeanFlowers, MeanVisit) %>% 
   left_join(Period, by = c("BlockID", "Year")) %>%
@@ -320,13 +307,12 @@ WeatherAndBiomass <- Biomass %>%
   mutate(tempAboveZeroAdi = ifelse(TempAdi > 0, TempAdi, 0)) %>%
   select(-tempAboveZero) %>%
   filter(doy > MinDate, doy < MaxDate) %>%
-  group_by(Year, BlockID, Plant, doy) %>% #added doy, but doesnt look correct
+  group_by(Year, BlockID, Plant) %>%
   summarise(CumTemp = sum(tempAboveZeroAdi, na.rm = TRUE), CumPrec = sum(precipitation, na.rm = TRUE)) %>% 
-  left_join(Biomass, by = c("Year", "BlockID", "Plant")) %>%
+  left_join(Biomass, by = c("Year", "BlockID", "Plant"))
+
+# Scale data
   mutate(CumTemp.cen = scale(CumTemp, scale = FALSE)) %>%
-  mutate(CumPrec.cen = scale(CumPrec, scale = FALSE)) %>%
-  left_join(MeanVisitRate2, by = c("siteID")) %>%
-  select(-Year.y, -Stage.y, -Site.y) %>%
-  rename(Year = Year.x, Stage = Stage.x, Site = Site.x)
+  mutate(CumPrec.cen = scale(CumPrec, scale = FALSE))
   
 
