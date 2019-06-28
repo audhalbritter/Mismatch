@@ -20,7 +20,7 @@ d4 <- as_tibble(x = scale(dat2016$MeanVisit))
 dat2016 <- dat2016 %>% 
   select(-CumTemp.cen) %>% 
   bind_cols(d1, d2, d3, d4) %>% 
-  rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12)
+  rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12, MeanVisit.cen = V13)
 
 ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = dat2016, weights = Tot_Ovule) 
 
