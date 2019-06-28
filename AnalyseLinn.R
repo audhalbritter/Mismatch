@@ -4,10 +4,10 @@ library("lme4")
 library("broom")
 library("nlme")
 
-install.packages("devtools")
-library("devtools")
-require(devtools)
-install_version("lme4", version = "1.1-10", repos = "http://cran.us.r-project.org")
+#install.packages("devtools")
+#library("devtools")
+#require(devtools)
+#install_version("lme4", version = "1.1-10", repos = "http://cran.us.r-project.org")
 
 ##################################
 ######## Biomasse analyser #######
@@ -256,6 +256,13 @@ summary(ModelSeedpotvisit3)
 AIC(ModelSeedpotvisit0, ModelSeedpotvisit1, ModelSeedpotvisit2, ModelSeedpotvisit3, ModelSeedpotvisit4)
 #Model 3 har lavest AIC
 
+
+
+
+
+
+
+
 ##################################################
 ## Fenologi
 #Plot med antall blomster x frø, for å se om det er konkurranse ller fasilitering
@@ -358,6 +365,13 @@ summary(PhenologySeedpot3)
 AIC(PhenologySeedpot0, PhenologySeedpot1, PhenologySeedpot2, PhenologySeedpot3, PhenologySeedpot4)
 #Modell 3 har lavest verdi.
   
+
+
+
+
+
+
+
 ##############################################3
 ## Pollen limitation? seedset x pollen treatment. Hvor seedset er enten seed potential eller seed mass, og pollentreatment er HP eller C.
   
@@ -439,6 +453,12 @@ summary(ModelSNSMStage4)
 AIC(ModelSNSMStage0, ModelSNSMStage1, ModelSNSMStage2, ModelSNSMStage3, ModelSNSMStage4)
 #Sier dette oss noe?
 
+
+
+
+
+
+
 ##############################
 #Temperatur og frødata
 
@@ -450,11 +470,11 @@ TemperatureSeedmass <- ggplot(WeatherAndBiomass, aes(x = CumTemp, y = log(Seed_m
 ggsave(TemperatureSeedmass, filename = "Figurer/TemperatureSeedmass.jpeg", height = 6, width = 8)
 
 #Model med random effects
-ModelCumTempSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE) 
-ModelCumTempSM1 <- lmer(log(Seed_mass) ~ CumTemp + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
-ModelCumTempSM2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
-ModelCumTempSM3 <- lmer(log(Seed_mass) ~ CumTemp+Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
-ModelCumTempSM4 <- lmer(log(Seed_mass) ~ CumTemp*Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2016), REML = FALSE)
+ModelCumTempSM0 <- lmer(log(Seed_mass) ~ 1 + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE) 
+ModelCumTempSM1 <- lmer(log(Seed_mass) ~ CumTemp + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumTempSM2 <- lmer(log(Seed_mass) ~ Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumTempSM3 <- lmer(log(Seed_mass) ~ CumTemp+Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
+ModelCumTempSM4 <- lmer(log(Seed_mass) ~ CumTemp*Stage + (1 | BlockID), data = WeatherAndBiomass %>% filter(Year == 2017), REML = FALSE)
 summary(ModelCumTempSM3)
 
 #Gjør AIC test
@@ -513,6 +533,27 @@ summary(ModelCumTempSP2)
 #Kan gjøre AIC test her for å se hvilken modell som er den beste
 AIC(ModelCumTempSP0, ModelCumTempSP1, ModelCumTempSP2, ModelCumTempSP3, ModelCumTempSP4)
 
+#Visitation rate and CumTemp
+TemperatureVisitationRate <- ggplot(WeatherAndBiomass, aes(x = CumTemp, y = mean.visit.rate, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(TemperatureVisitationRate, filename = "Figurer/TemperatureVisitationRate.jpeg", height = 6, width = 8)
+
+ModelCumTempVR0 <- glmer(mean.visit.rate ~ 1 + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016))
+ModelCumTempVR1 <- glmer(mean.visit.rate ~ CumTemp.cen + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempVR2 <- glmer(Smean.visit.rate ~ Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempVR3 <- glmer(mean.visit.rate ~ CumTemp.cen+Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+ModelCumTempVR4 <- glmer(mean.visit.rate ~ CumTemp.cen*Stage + (1 | BlockID), family="poisson", data = WeatherAndBiomass %>% filter(Year == 2016)) 
+summary(ModelCumTempVR2)
+
+#Kan gjøre AIC test her for å se hvilken modell som er den beste
+AIC(ModelCumTempVR0, ModelCumTempVR1, ModelCumTempVR2, ModelCumTempVR3, ModelCumTempVR4)
+
+
+
+
+
 
 
 #Graf med nedbør og frøvekt. Ser på hvert år hver for seg
@@ -557,3 +598,9 @@ Biomass_TimeToRipe <- Biomass %>%
   group_by(Year, Stage) %>%
   na.omit() %>%
   summarize(averaged.TTR = mean(TimeToRipe))
+
+#look for a temperature gradient in the snowmelt gradient
+ggplot(WeatherAndBiomass, aes(x = CumTemp, y = doy, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
