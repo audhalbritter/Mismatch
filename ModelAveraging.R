@@ -1,4 +1,7 @@
+source("RanunculusData.R")
+
 library("MuMIn")
+library("lme4")
 
 #  change the default "na.omit" to prevent models from being fitted to different datasets in case of missing values.
 options(na.action = "na.fail") # can also be put in the model
