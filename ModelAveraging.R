@@ -112,6 +112,8 @@ averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
 res <- data.frame(summary(averaged.model)$coefmat.full)
 
 
+
+# Plots
 WeatherAndBiomass %>% 
   select(Year, BlockID, Seed_potential, Biomass, Stage, Treatment, MeanVisit, MeanFlowers, CumTemp) %>% 
   filter(Year == "2016") %>% 
