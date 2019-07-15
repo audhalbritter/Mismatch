@@ -38,7 +38,7 @@ dat2016 <- dat2016 %>%
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12, MeanVisit.cen = V13)
 
 # Define full model with all variables
-ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + (1 | BlockID) + offset(log(Tot_Ovule)), family = "binomial", data = dat2016, weights = Tot_Ovule) 
+ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + (1 | BlockID), family = "binomial", data = dat2016) #removed weights = Tot_Ovule because we have a binomial distribution 
 
 
 # check model assumptions
@@ -46,7 +46,8 @@ ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + M
 fix.check(ModelSeedPotential2016)
 
 # The "drege" function runs all possible combinations of the full model. And produces a table wit R^2, AIC and wieghts. Intercept and offset is kept in all the models (= fixed).
-model.set <- dredge(ModelSeedPotential2016, rank = "AICc", extra = "R^2", fixed = "offset(log(Tot_Ovule))")
+model.set <- dredge(ModelSeedPotential2016, rank = "AICc", extra = "R^2")
+#removed fixed = offset(log(Tot_Ovule))
 # R squares are high (c. 0.8), this is good. It means the models are describing the data very well.
 
 mm <- data.frame(model.set) # making a data frame
@@ -71,16 +72,35 @@ res
 
 ### Now you can try for Seed mass :-)
 
-# Seed mass
+# Seed mass (done with lm, check if it can be done with lmer if we change treatment?)
+#uses the same code from line 25-33.
+
+#Define the model
 ModelSeedMass2016 <- lm(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen, data = dat2016)
 
+#Plot
 plot(ModelSeedMass2016)
+
+#Apply dredge function
 model.set <- dredge(ModelSeedMass2016, rank = "AICc", extra = "R^2")
+
+#Make a new dataframe
 mm <- data.frame(model.set)
 mm$cumsum <- cumsum(mm$weight)
+mm
+
+#Sekect the 95% confidence interval
 mm95 <- mm %>% filter(cumsum < 0.95)
+mm95 
+
+#Model averaging based on AIC values
 averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
+averaged.model
+
+#Getting the table to present
 res <- data.frame(summary(averaged.model)$coefmat.full)
+res
+
 summary(ModelSeedMass2016)
 
 
@@ -94,23 +114,39 @@ dat2017 <- WeatherAndBiomass %>% filter(Year == 2017,
 d1 <- as_tibble(x = scale(dat2017$CumTemp))
 d2 <- as_tibble(x = scale(dat2017$CumPrec))
 d3 <- as_tibble(x = scale(dat2017$MeanFlowers))
+d4 <- as_tibble(x = scale(dat2017$MeanFlowers)) #added this, since its added above, correct?
 
 dat2017 <- dat2017 %>% 
   #select(-CumTemp.cen) %>% 
-  bind_cols(d1, d2, d3) %>% 
+  bind_cols(d1, d2, d3, d4) %>%  #also added d4 here, see comment above
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12)
 
+#Model
 ModelSeedMass2017 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + (1| BlockID), data = dat2017, REML = FALSE)
 
+#Check the different plots (only get one type of plot here, correct?)
 plot(ModelSeedMass2017)
 
+#Dredge function
 model.set <- dredge(ModelSeedMass2017, rank = "AICc", extra = "R^2")
+
+#Making a dataframe
 mm <- data.frame(model.set)
 mm$cumsum <- cumsum(mm$weight)
-mm95 <- mm %>% filter(cumsum < 0.95)
-averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
-res <- data.frame(summary(averaged.model)$coefmat.full)
+mm
 
+#Choosing the 95 % confidence set of model
+mm95 <- mm %>% filter(cumsum < 0.95)
+mm95
+#Results: biomass + temp + mean flowers in the top model
+
+#Model averaging
+averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
+averaged.model
+
+#Results to present
+res <- data.frame(summary(averaged.model)$coefmat.full)
+res
 
 
 # Plots
