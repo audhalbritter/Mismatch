@@ -69,6 +69,8 @@ averaged.model
 res <- data.frame(summary(averaged.model)$coefmat.full)
 res
 
+#Getting the confidence intervals
+confint(averaged.model)
 
 ### Now you can try for Seed mass :-)
 
@@ -76,7 +78,7 @@ res
 #uses the same code from line 25-33.
 
 #Define the model
-ModelSeedMass2016 <- lm(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen, data = dat2016)
+ModelSeedMass2016 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + (1|BlockID), data = dat2016, REML = FALSE)
 
 #Plot
 plot(ModelSeedMass2016)
@@ -100,6 +102,8 @@ averaged.model
 #Getting the table to present
 res <- data.frame(summary(averaged.model)$coefmat.full)
 res
+
+confint(averaged.model)
 
 summary(ModelSeedMass2016)
 
@@ -148,6 +152,7 @@ averaged.model
 res <- data.frame(summary(averaged.model)$coefmat.full)
 res
 
+confint(averaged.model)
 
 # Plots
 WeatherAndBiomass %>% 
