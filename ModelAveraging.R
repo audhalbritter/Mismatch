@@ -66,11 +66,35 @@ averaged.model
 # Now the different variables have been weighed and you can see the "weighed coefficients". There are 2 different ways this can be calculated. We will use the full method. It is described in teh Gruber et al. 2011 paper. But not so important to understand it.
 
 # getting results. This table is what you can present in your results section. In my paper (Halbritter et al 2018) I plotted these variables (see Fig 3). See Table S4 and S6 for how I reported that results in table.
-res <- data.frame(summary(averaged.model)$coefmat.full)
-res
+res1 <- data.frame(summary(averaged.model)$coefmat.full) 
+
+TableA <- setNames(cbind(rownames(res1), res1, row.names = NULL), c("Factors", "Estimate", "SE", "AdjustedSE", "z-value", "Pr...z..")) #giving the first column a name, so that I can merge with confidence interval later
+TableA
+
 
 #Getting the confidence intervals
-confint(averaged.model)
+conf <- confint(averaged.model)
+TableB <- data.frame(conf) #creating confidence interval into table, to merge together with res1
+
+TableC <- setNames(cbind(rownames(TableB), TableB, row.names = NULL), 
+         c("Factors", "lowerCI", "upperCI"))
+
+TableC
+
+#Try to make a plot like the one Aud has in her paper, and also divide it into stages, not slope and absolute slope?
+#Merge res1 with confidence interval
+TableD <- TableA %>%
+  left_join(TableC, by = "Factors" ) #merging together res1 and conf
+TableD
+
+
+#Prøvd å lage ggplot med errorbars, men får det ikke til med CI (confidence interval), kun med SE
+ggplot(TableD, aes(x = Factors, y = Estimate)) + 
+  geom_errorbar(aes(ymin = Estimate-SE, ymax = Estimate+SE, width = .1)) + #errorbar fungerer kun riktig med SE her og ikke upperCI og lowerCI  
+  geom_point() +
+  geom_line() + 
+  
+
 
 ### Now you can try for Seed mass :-)
 
@@ -81,6 +105,7 @@ confint(averaged.model)
 ModelSeedMass2016 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + (1|BlockID), data = dat2016, REML = FALSE)
 
 #Plot
+fix.check(ModelSeedMass2016)
 plot(ModelSeedMass2016)
 
 #Apply dredge function
@@ -129,6 +154,7 @@ dat2017 <- dat2017 %>%
 ModelSeedMass2017 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + (1| BlockID), data = dat2017, REML = FALSE)
 
 #Check the different plots (only get one type of plot here, correct?)
+fix.check(ModelSeedMass2017)
 plot(ModelSeedMass2017)
 
 #Dredge function
