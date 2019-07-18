@@ -66,33 +66,31 @@ averaged.model
 # Now the different variables have been weighed and you can see the "weighed coefficients". There are 2 different ways this can be calculated. We will use the full method. It is described in teh Gruber et al. 2011 paper. But not so important to understand it.
 
 # getting results. This table is what you can present in your results section. In my paper (Halbritter et al 2018) I plotted these variables (see Fig 3). See Table S4 and S6 for how I reported that results in table.
-res1 <- data.frame(summary(averaged.model)$coefmat.full) 
+res <- data.frame(summary(averaged.model)$coefmat.full) 
 
-TableA <- setNames(cbind(rownames(res1), res1, row.names = NULL), c("Factors", "Estimate", "SE", "AdjustedSE", "z-value", "Pr...z..")) #giving the first column a name, so that I can merge with confidence interval later
-TableA
+res1 <- res %>%
+  rownames_to_column(var = "Variable") %>%
+  setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
+  select(-AdjSE) %>%
+  mutate(Category = Variable) %>%
+  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
+  mutate(CI.low = Estimate - 1.96 * StError) %>%
+  mutate(CI.high = Estimate + 1.96 * StError) %>%
+  mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
+   mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
+  select(Variable, Estimate, CI, Zvalue, Pvalue)
+res1
 
 
-#Getting the confidence intervals
-conf <- confint(averaged.model)
-TableB <- data.frame(conf) #creating confidence interval into table, to merge together with res1
 
-TableC <- setNames(cbind(rownames(TableB), TableB, row.names = NULL), 
-         c("Factors", "lowerCI", "upperCI"))
-
-TableC
 
 #Try to make a plot like the one Aud has in her paper, and also divide it into stages, not slope and absolute slope?
-#Merge res1 with confidence interval
-TableD <- TableA %>%
-  left_join(TableC, by = "Factors" ) #merging together res1 and conf
-TableD
-
 
 #Prøvd å lage ggplot med errorbars, men får det ikke til med CI (confidence interval), kun med SE
-ggplot(TableD, aes(x = Factors, y = Estimate)) + 
-  geom_errorbar(aes(ymin = Estimate-SE, ymax = Estimate+SE, width = .1)) + #errorbar fungerer kun riktig med SE her og ikke upperCI og lowerCI  
+ggplot(res1, aes(x = Variable, y = Estimate)) + 
+  geom_errorbar(aes(ymin = Estimate-CI, ymax = Estimate+CI, width = .1)) + #errorbar fungerer ikke ved å legge inn CI  
   geom_point() +
-  geom_line() + 
+  geom_line() 
   
 
 
@@ -128,9 +126,21 @@ averaged.model
 res <- data.frame(summary(averaged.model)$coefmat.full)
 res
 
-confint(averaged.model)
-
 summary(ModelSeedMass2016)
+
+res2 <- res %>%
+  rownames_to_column(var = "Variable") %>%
+  setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
+  select(-AdjSE) %>%
+  mutate(Category = Variable) %>%
+  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
+  mutate(CI.low = Estimate - 1.96 * StError) %>%
+  mutate(CI.high = Estimate + 1.96 * StError) %>%
+  mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
+  mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
+  select(Variable, Estimate, CI, Zvalue, Pvalue)
+res2
+
 
 
 # 2017 data
@@ -178,7 +188,18 @@ averaged.model
 res <- data.frame(summary(averaged.model)$coefmat.full)
 res
 
-confint(averaged.model)
+res3 <- res %>%
+  rownames_to_column(var = "Variable") %>%
+  setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
+  select(-AdjSE) %>%
+  mutate(Category = Variable) %>%
+  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
+  mutate(CI.low = Estimate - 1.96 * StError) %>%
+  mutate(CI.high = Estimate + 1.96 * StError) %>%
+  mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
+  mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
+  select(Variable, Estimate, CI, Zvalue, Pvalue)
+res3
 
 # Plots
 WeatherAndBiomass %>% 
