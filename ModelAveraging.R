@@ -4,6 +4,7 @@ library("MuMIn")
 library("lme4")
 
 # Function to check model assumptions
+
 fix.check <- function(mod){		#function to produce model-checking plots for the fixed effects of an lmer model
   par(mfrow = c(2,2))
   plot(fitted(mod),resid(mod))	#should have no pattern
@@ -38,7 +39,7 @@ dat2016 <- dat2016 %>%
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12, MeanVisit.cen = V13)
 
 # Define full model with all variables
-ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + (1 | BlockID), family = "binomial", data = dat2016) #removed weights = Tot_Ovule because we have a binomial distribution 
+ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1 | BlockID), family = "binomial", data = dat2016) #removed weights = Tot_Ovule because we have a binomial distribution 
 
 
 # check model assumptions
@@ -58,7 +59,8 @@ mm
 # select 95% confident set of models
 mm95 <- mm %>% filter(cumsum < 0.95)
 mm95
-# Now you can see there are 20 models kept.
+# Now you can see there are 20 models kept. New comment: now there are 66 models, with precipitation included in the model, and offset removed
+
 
 # The "model.avg" function does a model averaging based on AIC values
 averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
@@ -67,30 +69,37 @@ averaged.model
 
 # getting results. This table is what you can present in your results section. In my paper (Halbritter et al 2018) I plotted these variables (see Fig 3). See Table S4 and S6 for how I reported that results in table.
 res <- data.frame(summary(averaged.model)$coefmat.full) 
+res
 
 res1 <- res %>%
   rownames_to_column(var = "Variable") %>%
   setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
   select(-AdjSE) %>%
   mutate(Category = Variable) %>%
-  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
+  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "CumPrec.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Cumulative precipitation", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
   mutate(CI.low = Estimate - 1.96 * StError) %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>%
   mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
-   mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
-  select(Variable, Estimate, CI, Zvalue, Pvalue)
+   #mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
+  select(Variable, Estimate, CI.low, CI.high, Zvalue, Pvalue)
 res1
 
+#nothing is significant
 
 
 
-#Try to make a plot like the one Aud has in her paper, and also divide it into stages, not slope and absolute slope?
-
-#Prøvd å lage ggplot med errorbars, men får det ikke til med CI (confidence interval), kun med SE
-ggplot(res1, aes(x = Variable, y = Estimate)) + 
-  geom_errorbar(aes(ymin = Estimate-CI, ymax = Estimate+CI, width = .1)) + #errorbar fungerer ikke ved å legge inn CI  
+#Plot, ikke endret navn på intercept da jeg ikke vet om det er stage E eller treatment: control
+Seedpotential2016 <- ggplot(res1, aes(x = Estimate, y = Variable)) + 
+  geom_errorbarh(aes(xmin = CI.low, xmax = CI.high, height = .0)) +   
   geom_point() +
-  geom_line() 
+  geom_line() +
+  ggtitle("Seed potential 2016") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = "Parameter estimates", y="") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank()) +
+  geom_vline(xintercept = 0, linetype="dashed", color = "grey")
+ggsave(Seedpotential2016, filename = "Figurer/Seedpotential2016.jpeg", height = 6, width = 8)
   
 
 
@@ -100,7 +109,7 @@ ggplot(res1, aes(x = Variable, y = Estimate)) +
 #uses the same code from line 25-33.
 
 #Define the model
-ModelSeedMass2016 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + (1|BlockID), data = dat2016, REML = FALSE)
+ModelSeedMass2016 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1|BlockID), data = dat2016, REML = FALSE)
 
 #Plot
 fix.check(ModelSeedMass2016)
@@ -117,6 +126,7 @@ mm
 #Sekect the 95% confidence interval
 mm95 <- mm %>% filter(cumsum < 0.95)
 mm95 
+#Gives us 34 models
 
 #Model averaging based on AIC values
 averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
@@ -133,13 +143,28 @@ res2 <- res %>%
   setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
   select(-AdjSE) %>%
   mutate(Category = Variable) %>%
-  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
+  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "Biomass", "StageM", "StageL", "CumTemp.cen", "TreatmentPollinated", "MeanFlower.cen", "MeanVisit.cen", "CumPrec.cen"), c("Stage E", "Biomass", "Stage M", "Stage L", "Cumulative temperature", "Treatment: hand pollinated", "Phenology", "Mean visitation rate", "Cumulative precipitation"))) %>%
   mutate(CI.low = Estimate - 1.96 * StError) %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>%
   mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
-  mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
-  select(Variable, Estimate, CI, Zvalue, Pvalue)
+  #mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
+  select(Variable, Estimate, CI.low, CI.high, Zvalue, Pvalue)
 res2
+
+#biomass is significant
+
+#Plot, har ikke endret navn på intercept da jeg ikke vet om det er stage E eller treatment: control
+Seedmass2016 <- ggplot(res2, aes(x = Estimate, y = Variable)) + 
+  geom_errorbarh(aes(xmin = CI.low, xmax = CI.high, height = .0)) +   
+  geom_point() +
+  geom_line() +
+  ggtitle("Seed mass 2016") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = "Parameter estimates", y="") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank()) +
+  geom_vline(xintercept = 0, linetype="dashed", color = "grey")
+ggsave(Seedmass2016, filename = "Figurer/Seedmass2016.jpeg", height = 6, width = 8)
 
 
 
@@ -161,7 +186,7 @@ dat2017 <- dat2017 %>%
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12)
 
 #Model
-ModelSeedMass2017 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + (1| BlockID), data = dat2017, REML = FALSE)
+ModelSeedMass2017 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1| BlockID), data = dat2017, REML = FALSE)
 
 #Check the different plots (only get one type of plot here, correct?)
 fix.check(ModelSeedMass2017)
@@ -178,7 +203,7 @@ mm
 #Choosing the 95 % confidence set of model
 mm95 <- mm %>% filter(cumsum < 0.95)
 mm95
-#Results: biomass + temp + mean flowers in the top model
+#Gives us 22 models
 
 #Model averaging
 averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
@@ -193,17 +218,35 @@ res3 <- res %>%
   setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
   select(-AdjSE) %>%
   mutate(Category = Variable) %>%
-  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "CumTemp.cen", "MeanVisit.cen", "Biomass", "MeanFlower.cen", "StageM", "StageL", "TreatmentPollinated"), c("Stage E", "Cumulative temperature", "Mean visitation rate", "Biomass", "Phenology", "Stage M", "Stage L", "Treatment: hand pollinated"))) %>%
+  mutate(Variable = plyr::mapvalues(Variable, c("Intercept", "Biomass", "CumTemp.cen", "MeanFlower.cen", "Meanvisit.cen", "StageE", "StageM", "TreatmentPollinated", "CumPrec.cen"), c("Stage E", "Biomass", "Cumulative temperature", "Phenology", "Mean visitation rate", "Stage M", "Stage L", "Treatment: hand pollinated", "Cumulative precipitation"))) %>%
   mutate(CI.low = Estimate - 1.96 * StError) %>%
   mutate(CI.high = Estimate + 1.96 * StError) %>%
   mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
-  mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
-  select(Variable, Estimate, CI, Zvalue, Pvalue)
+  #mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
+  select(Variable, Estimate, CI.low, CI.high, Zvalue, Pvalue)
 res3
+
+#biomass is significant
+
+#Plot, ikke endret navn på intercept da jeg ikke vet om det er stage E eller treatment: control
+
+Seedmass2017 <- ggplot(res3, aes(x = Estimate, y = Variable)) + 
+  geom_errorbarh(aes(xmin = CI.low, xmax = CI.high, height = .0)) +   
+  geom_point() +
+  geom_line() +
+  ggtitle("Seed mass 2017") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(x = "Parameter estimates", y="") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank()) +
+  geom_vline(xintercept = 0, linetype="dashed", color = "grey")
+ggsave(Seedmass2017, filename = "Figurer/Seedmass2017.jpeg", height = 6, width = 8)
+
+###############################
 
 # Plots
 WeatherAndBiomass %>% 
-  select(Year, BlockID, Seed_potential, Biomass, Stage, Treatment, MeanVisit, MeanFlowers, CumTemp) %>% 
+  select(Year, BlockID, Seed_potential, Biomass, Stage, Treatment, MeanVisit, MeanFlowers, CumTemp, CumPrec) %>% #added cumprec
   filter(Year == "2016") %>% 
   gather(key = Variable, value = Value, -Year, -Seed_potential, -Stage, -BlockID, -Treatment) %>% 
   ggplot(aes(y = Seed_potential, x = Value, color = Stage, shape = Treatment)) +
@@ -214,7 +257,7 @@ WeatherAndBiomass %>%
   facet_grid(~ Variable, scales = "free")
 
 WeatherAndBiomass %>% 
-  select(Year, BlockID, Seed_mass, Biomass, Stage, Treatment, MeanVisit, MeanFlowers, CumTemp) %>% 
+  select(Year, BlockID, Seed_mass, Biomass, Stage, Treatment, MeanVisit, MeanFlowers, CumTemp, CumPrec) %>% #added cumprec
   gather(key = Variable, value = Value, -Year, -Seed_mass, -Stage, -BlockID, -Treatment) %>% 
   ggplot(aes(y = Seed_mass, x = Value, color = Stage, shape = Treatment)) +
   geom_point() +
