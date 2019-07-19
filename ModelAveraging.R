@@ -39,7 +39,7 @@ dat2016 <- dat2016 %>%
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12, MeanVisit.cen = V13)
 
 # Define full model with all variables
-ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanVisit.cen + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1 | BlockID), family = "binomial", data = dat2016) #removed weights = Tot_Ovule because we have a binomial distribution 
+ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1 | BlockID), family = "binomial", data = dat2016) #removed weights = Tot_Ovule because we have a binomial distribution 
 
 
 # check model assumptions
@@ -47,31 +47,31 @@ ModelSeedPotential2016 <- glmer(Seed_potential ~ Biomass + Stage + Treatment + M
 fix.check(ModelSeedPotential2016)
 
 # The "drege" function runs all possible combinations of the full model. And produces a table wit R^2, AIC and wieghts. Intercept and offset is kept in all the models (= fixed).
-model.set <- dredge(ModelSeedPotential2016, rank = "AICc", extra = "R^2")
+model.setSP <- dredge(ModelSeedPotential2016, rank = "AICc", extra = "R^2")
 #removed fixed = offset(log(Tot_Ovule))
 # R squares are high (c. 0.8), this is good. It means the models are describing the data very well.
 
-mm <- data.frame(model.set) # making a data frame
-mm$cumsum <- cumsum(mm$weight) # calculate the cumulative sum of the weights of all models
-mm
+mmSP <- data.frame(model.setSP) # making a data frame
+mmSP$cumsum <- cumsum(mmSP$weight) # calculate the cumulative sum of the weights of all models
+mmSP
 # Look at the cumsum. Many models are needed to sum up to 0.95. This means that all these models are important and we will keep c. 20 models for the next step. So we are not selecting one best model, but a bunch of models which are good.
 
 # select 95% confident set of models
-mm95 <- mm %>% filter(cumsum < 0.95)
-mm95
-# Now you can see there are 20 models kept. New comment: now there are 66 models, with precipitation included in the model, and offset removed
+mmSP95 <- mmSP %>% filter(cumsum < 0.95)
+mmSP95
+# Now you can see there are 20 models kept. New comment: now there are 38 models, with precipitation included and mean visit excluded in the model, and offset removed
 
 
 # The "model.avg" function does a model averaging based on AIC values
-averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
-averaged.model
+averaged.modelSP <- model.avg(model.setSP, cumsum(weight) <= 0.95)
+averaged.modelSP
 # Now the different variables have been weighed and you can see the "weighed coefficients". There are 2 different ways this can be calculated. We will use the full method. It is described in teh Gruber et al. 2011 paper. But not so important to understand it.
 
 # getting results. This table is what you can present in your results section. In my paper (Halbritter et al 2018) I plotted these variables (see Fig 3). See Table S4 and S6 for how I reported that results in table.
-res <- data.frame(summary(averaged.model)$coefmat.full) 
-res
+resSP <- data.frame(summary(averaged.modelSP)$coefmat.full) 
+resSP
 
-res1 <- res %>%
+resSP1 <- resSP %>%
   rownames_to_column(var = "Variable") %>%
   setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
   select(-AdjSE) %>%
@@ -82,14 +82,14 @@ res1 <- res %>%
   mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
    #mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
   select(Variable, Estimate, CI.low, CI.high, Zvalue, Pvalue)
-res1
+resSP1
 
 #nothing is significant
 
 
 
 #Plot, ikke endret navn på intercept da jeg ikke vet om det er stage E eller treatment: control
-Seedpotential2016 <- ggplot(res1, aes(x = Estimate, y = Variable)) + 
+Seedpotential2016 <- ggplot(resSP1, aes(x = Estimate, y = Variable)) + 
   geom_errorbarh(aes(xmin = CI.low, xmax = CI.high, height = .0)) +   
   geom_point() +
   geom_line() +
@@ -109,36 +109,36 @@ ggsave(Seedpotential2016, filename = "Figurer/Seedpotential2016.jpeg", height = 
 #uses the same code from line 25-33.
 
 #Define the model
-ModelSeedMass2016 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1|BlockID), data = dat2016, REML = FALSE)
+ModelSeedMass2016 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1|BlockID), data = dat2016, REML = FALSE)
 
 #Plot
 fix.check(ModelSeedMass2016)
 plot(ModelSeedMass2016)
 
 #Apply dredge function
-model.set <- dredge(ModelSeedMass2016, rank = "AICc", extra = "R^2")
+model.setSM16 <- dredge(ModelSeedMass2016, rank = "AICc", extra = "R^2")
 
 #Make a new dataframe
-mm <- data.frame(model.set)
-mm$cumsum <- cumsum(mm$weight)
-mm
+mmSM16 <- data.frame(model.setSM16)
+mmSM16$cumsum <- cumsum(mmSM16$weight)
+mmSM16
 
 #Sekect the 95% confidence interval
-mm95 <- mm %>% filter(cumsum < 0.95)
-mm95 
-#Gives us 34 models
+mmSM1695 <- mmSM16 %>% filter(cumsum < 0.95)
+mmSM1695 
+#Gives us 17 models
 
 #Model averaging based on AIC values
-averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
-averaged.model
+averaged.modelSM16 <- model.avg(model.setSM16, cumsum(weight) <= 0.95)
+averaged.modelSM16
 
 #Getting the table to present
-res <- data.frame(summary(averaged.model)$coefmat.full)
-res
+resSM16 <- data.frame(summary(averaged.modelSM16)$coefmat.full)
+resSM16
 
 summary(ModelSeedMass2016)
 
-res2 <- res %>%
+resSM162 <- resSM16 %>%
   rownames_to_column(var = "Variable") %>%
   setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
   select(-AdjSE) %>%
@@ -149,12 +149,12 @@ res2 <- res %>%
   mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
   #mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
   select(Variable, Estimate, CI.low, CI.high, Zvalue, Pvalue)
-res2
+resSM162
 
-#biomass is significant
+#biomass and intercept is significant
 
 #Plot, har ikke endret navn på intercept da jeg ikke vet om det er stage E eller treatment: control
-Seedmass2016 <- ggplot(res2, aes(x = Estimate, y = Variable)) + 
+Seedmass2016 <- ggplot(resSM162, aes(x = Estimate, y = Variable)) + 
   geom_errorbarh(aes(xmin = CI.low, xmax = CI.high, height = .0)) +   
   geom_point() +
   geom_line() +
@@ -186,34 +186,34 @@ dat2017 <- dat2017 %>%
   rename(CumTemp.cen = V1, CumPrec.cen = V11, MeanFlower.cen = V12)
 
 #Model
-ModelSeedMass2017 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanVisit + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1| BlockID), data = dat2017, REML = FALSE)
+ModelSeedMass2017 <- lmer(log(Seed_mass) ~ Biomass + Stage + Treatment + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1| BlockID), data = dat2017, REML = FALSE)
 
 #Check the different plots (only get one type of plot here, correct?)
 fix.check(ModelSeedMass2017)
 plot(ModelSeedMass2017)
 
 #Dredge function
-model.set <- dredge(ModelSeedMass2017, rank = "AICc", extra = "R^2")
+model.setSM17 <- dredge(ModelSeedMass2017, rank = "AICc", extra = "R^2")
 
 #Making a dataframe
-mm <- data.frame(model.set)
-mm$cumsum <- cumsum(mm$weight)
-mm
+mmSM17 <- data.frame(model.setSM17)
+mmSM17$cumsum <- cumsum(mmSM17$weight)
+mmSM17
 
 #Choosing the 95 % confidence set of model
-mm95 <- mm %>% filter(cumsum < 0.95)
-mm95
-#Gives us 22 models
+mmSM1795 <- mmSM17 %>% filter(cumsum < 0.95)
+mmSM1795
+#Gives us 9 models
 
 #Model averaging
-averaged.model <- model.avg(model.set, cumsum(weight) <= 0.95)
-averaged.model
+averaged.modelSM17 <- model.avg(model.setSM17, cumsum(weight) <= 0.95)
+averaged.modelSM17
 
 #Results to present
-res <- data.frame(summary(averaged.model)$coefmat.full)
-res
+resSM17 <- data.frame(summary(averaged.modelSM17)$coefmat.full)
+resSM17
 
-res3 <- res %>%
+resSM173 <- resSM17 %>%
   rownames_to_column(var = "Variable") %>%
   setNames(., c("Variable", "Estimate", "StError", "AdjSE", "Zvalue", "Pvalue")) %>%
   select(-AdjSE) %>%
@@ -224,13 +224,13 @@ res3 <- res %>%
   mutate(Estimate = round(Estimate, 2), CI.low = round(CI.low, 2), CI.high = round(CI.high, 2), Zvalue = round(Zvalue, 2), Pvalue = round(Pvalue, 3)) %>%
   #mutate(CI = paste(CI.low, CI.high, sep = " - ")) %>%
   select(Variable, Estimate, CI.low, CI.high, Zvalue, Pvalue)
-res3
+resSM173
 
-#biomass is significant
+#biomass, intercept and phenology is significant
 
 #Plot, ikke endret navn på intercept da jeg ikke vet om det er stage E eller treatment: control
 
-Seedmass2017 <- ggplot(res3, aes(x = Estimate, y = Variable)) + 
+Seedmass2017 <- ggplot(resSM173, aes(x = Estimate, y = Variable)) + 
   geom_errorbarh(aes(xmin = CI.low, xmax = CI.high, height = .0)) +   
   geom_point() +
   geom_line() +
