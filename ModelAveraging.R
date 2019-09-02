@@ -2,7 +2,7 @@ source("RanunculusData.R")
 
 library("MuMIn")
 library("lme4")
-library("plyr")
+
 
 # Function to check model assumptions
 
@@ -247,6 +247,41 @@ Seedmass2017 <- ggplot(resSM173, aes(x = Estimate, y = Variable)) +
 ggsave(Seedmass2017, filename = "Figurer/Seedmass2017.jpeg", height = 6, width = 8)
 
 ###############################
+#Model with interaction????
+#Define the model
+Model2SeedMass2016 <- lmer(log(Seed_mass) ~ Biomass * Stage + Treatment + MeanFlower.cen + CumTemp.cen + CumPrec.cen + (1|BlockID), data = dat2016, REML = FALSE)
+
+#Plot
+fix.check(Model2SeedMass2016)
+plot(Model2SeedMass2016)
+
+#Apply dredge function
+model2.setSM16 <- dredge(Model2SeedMass2016, rank = "AICc", extra = "R^2")
+
+#Make a new dataframe
+mm2SM16 <- data.frame(model2.setSM16)
+mm2SM16$cumsum <- cumsum(mm2SM16$weight)
+mm2SM16
+
+#Sekect the 95% confidence interval
+mm2SM1695 <- mm2SM16 %>% filter(cumsum < 0.95)
+mm2SM1695 
+#Gives us 28 models
+
+#Model averaging based on AIC values
+averaged.model2SM16 <- model.avg(model2.setSM16, cumsum(weight) <= 0.95)
+averaged.model2SM16
+
+#Getting the table to present
+res2SM16 <- data.frame(summary(averaged.model2SM16)$coefmat.full)
+res2SM16
+
+summary(ModelSeedMass2016)
+
+
+
+
+
 
 # Plots
 WeatherAndBiomass %>% 
@@ -269,3 +304,4 @@ WeatherAndBiomass %>%
   scale_shape_manual(values = c(1, 17)) +
   scale_linetype_manual(values = c("solid", "dashed")) +
   facet_grid(Year ~ Variable, scales = "free")
+
