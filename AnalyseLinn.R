@@ -17,6 +17,7 @@ Biomass
 hist(log(Biomass$Seed_mass), breaks = 20)
 Model <- lm(log(Seed_mass) ~ Biomass*Stage, data = Biomass) 
 summary(Model)  
+Biomass
 
 #Siden modellen er log transformert bruker vi exp for å få tilbake dataene til vanlig skala slik at vi kan tolke dataene
 tidy(Model) %>%
@@ -133,6 +134,8 @@ AIC(ModelSeedset0, ModelSeedset1, ModelSeedset2, ModelSeedset3, ModelSeedset4)
 #Korrelasjonstester, går det ann å bare bruke seedmass, eller har antall frø og ovuler noe å si?
 
 cor.test(Biomass$Seed_mass, Biomass$Seed_number)
+cor.test(Biomass$Seed_mass, Biomass$Ovule_number)
+cor.test(Biomass$Seed_mass, Biomass$Tot_Ovule)
 
 plot(Biomass$Seed_mass, Biomass$Seed_number)
 plot(Biomass$Seed_mass, Biomass$Ovule_number)
