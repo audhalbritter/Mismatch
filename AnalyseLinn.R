@@ -624,12 +624,14 @@ StageAndSeedmass <- ggplot(Biomass, aes(x = Stage, y = log(Seed_mass), color = S
 ggsave(StageAndSeedmass, filename = "Figurer/StageAndSeedmass.jpeg", height = 6, width = 8)
 
 ################################ Enkle boksplot av ekstraresultater for å forklare resultatene
-SeedmassxYear <- ggplot(Biomass, aes(x = factor(Year), y = log(Seed_mass)))+ 
-  scale_x_discrete(labels = c("2016", "2017")) +
+
+SeedmassxYear <- ggplot(Biomass, aes(x = Stage, y = Seed_mass))+ 
   geom_boxplot() +
-  geom_smooth(method = "lm")+
-  labs(title = "Seedmass in 2016 and 2017", x = "Year", y = "Seed mass (log transformed)")
+  geom_smooth(method = "lm") +
+  facet_wrap(~Year) + 
+  labs(title = "Seedmass in 2016 and 2017", x = "Stage", y = "Seed mass (g)")
 ggsave(SeedmassxYear, filename = "Figurer/SeedmassxYear.jpeg", height = 6, width = 8)
+
 
 BiomassxStage <- ggplot(Biomass, aes(x = Stage, y = Biomass))+ 
   geom_boxplot() +
@@ -643,6 +645,7 @@ TemperaturexYear <- ggplot(WeatherAndBiomass, aes(x = factor(Year), y = CumTemp)
   geom_smooth(method = "lm")+
   labs(title = "Temperature in 2016 and 2017", x = "Year", y = "Temperature")
 ggsave(TemperaturexYear, filename = "Figurer/TemperaturexYear.jpeg", height = 6, width = 8)
+
 
 PrecipitationxYear <- ggplot(WeatherAndBiomass, aes(x = factor(Year), y = CumPrec))+ 
   scale_x_discrete(labels = c("2016", "2017")) +
