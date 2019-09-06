@@ -40,7 +40,7 @@ ModelBiomass1 <- lmer(log(Seed_mass) ~ Biomass + (1|BlockID), data = Biomass %>%
 ModelBiomass2 <- lmer(log(Seed_mass) ~ Stage + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
 ModelBiomass3 <- lmer(log(Seed_mass) ~ Biomass+Stage + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
 ModelBiomass4 <- lmer(log(Seed_mass) ~ Biomass*Stage + (1|BlockID), data = Biomass %>% filter(Year == 2016), REML = FALSE)
-summary(ModelBiomass3)
+summary(ModelBiomass4)
 
 #Gjør AIC test
 AIC(ModelBiomass0, ModelBiomass1, ModelBiomass2, ModelBiomass3, ModelBiomass4)
@@ -112,7 +112,7 @@ AIC(ModelSeedOvule0, ModelSeedOvule1, ModelSeedOvule2, ModelSeedOvule3, ModelSee
 ##################################################
 #Graf med Seed_potential = antall frø/(antall frø + antall ovule) og hvordan biomasse påvirker her.
 
-BiomassAndSeedpotential <- ggplot(Biomass1, aes(x = Biomass, y = Seed_potential, color = Stage)) +
+BiomassAndSeedpotential <- ggplot(Biomass, aes(x = Biomass, y = Seed_potential, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
   facet_wrap(~ Year)
@@ -608,3 +608,45 @@ ggplot(WeatherAndBiomass, aes(x = CumTemp, y = doy, color = Stage)) +
   geom_point() +
   geom_smooth(method = "lm") +
   facet_wrap(~ Year)
+
+################################################
+#seed potential/seedmass x stage graph
+StageAndSeedpotential <- ggplot(Biomass, aes(x = Stage, y = Seed_potential, color = Stage)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ Year)
+ggsave(StageAndSeedpotential, filename = "Figurer/StageAndSeedpotential.jpeg", height = 6, width = 8)
+
+StageAndSeedmass <- ggplot(Biomass, aes(x = Stage, y = log(Seed_mass), color = Stage))+ 
+  geom_boxplot() + 
+  #geom_smooth(method = "lm") + 
+  facet_wrap(~ Year)
+ggsave(StageAndSeedmass, filename = "Figurer/StageAndSeedmass.jpeg", height = 6, width = 8)
+
+################################ Enkle boksplot av ekstraresultater for å forklare resultatene
+SeedmassxYear <- ggplot(Biomass, aes(x = factor(Year), y = log(Seed_mass)))+ 
+  scale_x_discrete(labels = c("2016", "2017")) +
+  geom_boxplot() +
+  geom_smooth(method = "lm")+
+  labs(title = "Seedmass in 2016 and 2017", x = "Year", y = "Seed mass (log transformed)")
+ggsave(SeedmassxYear, filename = "Figurer/SeedmassxYear.jpeg", height = 6, width = 8)
+
+BiomassxStage <- ggplot(Biomass, aes(x = Stage, y = Biomass))+ 
+  geom_boxplot() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~Year)
+ggsave(BiomassxStage, filename = "Figurer/BiomassxStage.jpeg", height = 6, width = 8)
+
+TemperaturexYear <- ggplot(WeatherAndBiomass, aes(x = factor(Year), y = CumTemp))+ 
+  scale_x_discrete(labels = c("2016", "2017")) +
+  geom_boxplot() +
+  geom_smooth(method = "lm")+
+  labs(title = "Temperature in 2016 and 2017", x = "Year", y = "Temperature")
+ggsave(TemperaturexYear, filename = "Figurer/TemperaturexYear.jpeg", height = 6, width = 8)
+
+PrecipitationxYear <- ggplot(WeatherAndBiomass, aes(x = factor(Year), y = CumPrec))+ 
+  scale_x_discrete(labels = c("2016", "2017")) +
+  geom_boxplot() +
+  geom_smooth(method = "lm")+
+  labs(title = "Precipitation in 2016 and 2017", x = "Year", y = "Precipitation")
+ggsave(PrecipitationxYear, filename = "Figurer/PrecipitationxYear.jpeg", height = 6, width = 8)
