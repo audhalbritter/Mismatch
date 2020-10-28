@@ -1,4 +1,5 @@
-source("RanunculusData.R")
+source("R/1_Import_RanunculusData.R")
+source("R/2_PeakPredicted.R")
 
 library("nlme")
 
@@ -25,21 +26,25 @@ peaks.17 <- AllPred %>%
 summary(lm(peak.fl~peak.poll, peaks.17))
 summary(lm(peak.fl~peak.poll*stage, peaks.17))
 
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
-AllPred %>%
+
+Peak_Flower_Poll_Figure <- AllPred %>%
   filter(stage != "L") %>% 
-  ggplot(aes(x = peak.fl, y = peak.poll, colour = stage)) +
-  labs(y = "Peak pollinator visitation (day of the year)", x = "Peak flowering (day of the year)", color = "Snowmelt stage") +
-  geom_smooth(method = lm, se = FALSE, size = 1) +
+  ggplot(aes(x = peak.fl, y = peak.poll)) +
+  labs(y = "Day of peak pollinator visitation", x = "Day of peak flowering", color = "Snowmelt stage") +
+  geom_smooth(method = lm, se = FALSE, size = 1, colour = "grey30") +
   geom_point(aes(colour = factor(stage), shape = factor(stage)), size = 2) +
-  scale_color_manual(labels = c ("early","mid", "late"), values=cbbPalette[c(7,3,5)], name = "snowmelt stage") +
+  scale_color_manual(labels = c ("early","mid", "late"), values = cbbPalette[c(3,7,4)], name = "snowmelt stage") +
   scale_shape_manual(labels = c ("early","mid", "late"), values = c(15,16,17), name = "snowmelt stage") +
-  # geom_abline(slope = 1, color = "black", size = 20, alpha = 0.1) +
-  geom_abline(slope = 1, color = "black", linetype = "dashed") +
+  geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
   theme_light(base_size = 16) +
   facet_wrap(~year) +
-  theme(legend.position = "bottom", legend.title=element_text(size=12), legend.text=element_text(size=12))
+  theme(legend.position = "bottom", 
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=12))
 
+ggsave(Peak_Flower_Poll_Figure, filename = "Peak_Flower_Poll_Figure.jpeg", dpi = 300)
 
 
 ##### POLLINATION VISITATION RATE ##################################################
