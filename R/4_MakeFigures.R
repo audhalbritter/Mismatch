@@ -1,6 +1,13 @@
+##### DATA ANALYSIS CODE ######
+# This is the code to analyse the data for Silje Andrea Hjortland Östman's master thesis (University of Bergen), 2018, Plant-pollinator interactions in the alpine: Landscape heterogeneity acts as a potential buffer against climate-change induced mismatch in the pollinator-generalist Ranunculus acris
+
+# This is also the code to analyse the data for the plant-pollinator interaction part from Roos et al. 20XX.
+
+# import data and calculate day of peak flowering and pollinaton
 source("R/1_Import_RanunculusData.R")
 source("R/2_PeakPredicted.R")
 
+### LIBRARIES
 library("nlme")
 
 
@@ -75,3 +82,16 @@ pollination2 %>%
   facet_grid(stage ~ year.poll, scales = "free_y") +
   theme_light(base_size = 18)
 
+
+
+#### REPRODUCTIVE OUTPUT ##########################################################
+
+## Reproductive output by treatment
+Biomass %>% 
+  filter(Stage != "L") %>%
+  ggplot(aes(y=Seed_mass, x=Treatment, fill = Treatment)) +
+  geom_boxplot() +
+  facet_grid(Year~Stage, labeller = labeller(Stage = as_labeller(c("F" = "early", "E" = "mid", "M" = "late")))) +
+  theme_light(base_size = 16) +
+  labs(y="Reproductive output", x="", fill="") +
+  scale_fill_manual(values=cbbPalette[c(7,3)])
