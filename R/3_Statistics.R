@@ -1,5 +1,12 @@
+##### DATA ANALYSIS CODE ######
+# This is the code to analyse the data for Silje Andrea Hjortland Östman's master thesis (University of Bergen), 2018, Plant-pollinator interactions in the alpine: Landscape heterogeneity acts as a potential buffer against climate-change induced mismatch in the pollinator-generalist Ranunculus acris
+
+# This is also the code to analyse the data for the plant-pollinator interaction part from Roos et al. 20XX.
+
+# import data and calculate day of peak flowering and pollinaton
 source("R/1_Import_RanunculusData.R")
 source("R/2_PeakPredicted.R")
+
 
 ##### PEAK FLOWER/ PEAK POLLINATORS ################################################
 # 2016

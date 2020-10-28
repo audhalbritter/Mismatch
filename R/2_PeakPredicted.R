@@ -1,6 +1,8 @@
-source("R/1_Import_RanunculusData.R")
-
 #### PREDICT PEAK FLOWER AND PEAK INSECT ####
+# Calculate day of peak flowering and pollinaton
+
+# import data
+source("R/1_Import_RanunculusData.R")
 
 ##### FLOWERS ####
 # fitler data

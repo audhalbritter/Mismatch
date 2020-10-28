@@ -1,4 +1,5 @@
-##### PHENOLOGY ######
+##### PLANT POLLINATOR DATA FINSE 2016 AND 2017 ######
+# import and prepare plant-pollinator data
 
 #### LIBRARIES
 library("tidyverse")
