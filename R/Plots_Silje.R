@@ -1,8 +1,8 @@
-source("RanunculusData.R")
-source("PeakPredicted.R")
+source("R/1_Import_RanunculusData.R")
+source("R/2_PeakPredicted.R")
 
-library(gridExtra)
-library(broom)
+library("gridExtra")
+library("broom")
 
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 

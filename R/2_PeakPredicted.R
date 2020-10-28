@@ -1,12 +1,10 @@
-source("RanunculusData.R")
+source("R/1_Import_RanunculusData.R")
 
 #### PREDICT PEAK FLOWER AND PEAK INSECT ####
 
 ##### FLOWERS ####
 # fitler data
 dat.fl <- phenology %>% 
-  #filter(year == "2017") %>% 
-  #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day))
 
 # function to find best model
@@ -76,10 +74,7 @@ PredFl <- pred.fl %>%
 ##### INSECTS ####
 # filter data
 dat.pol <- pollination %>% 
-  #filter(year == "2017") %>% 
-  #filter(site == "01", stage == "F") %>% 
   mutate(doy = yday(day)) 
-  #mutate(poll.sqm.trans = (poll.sqm - min(poll.sqm))/(max(poll.sqm) - min(poll.sqm)))
 
 # Function to find best model
 Compare.models.pol <- function(dat.pol){
@@ -138,5 +133,3 @@ AllPred <- PredPoll %>%
 
 AllPred$siteID <- as.character(AllPred$siteID)
 AllPred$siteID <- factor(AllPred$siteID, levels=unique(AllPred$siteID))  
-
-#save(AllPred, file = "AllPred.RData")

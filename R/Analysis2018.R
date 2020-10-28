@@ -48,7 +48,7 @@ AllPred %>%
 dfVisitRate <- pollination2 %>% 
   ungroup() %>% 
   filter(std.fly != "Inf", stage != "L") %>% 
-  mutate(stage = recode(stage, "F"="Early", "E" = "Mid", "M" = "Late")) %>% 
+  mutate(stage = recode(stage, "F"="Early", "E" = "Mid", "M" = "Late")) %>%
   rename(year = year.poll, gradient = site) %>% 
   group_by(year) %>% 
   do(fit = lm(std.fly ~ doy + I(doy^2), data = .),
