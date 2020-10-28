@@ -11,4 +11,10 @@ In addition, a hand-pollination experiment was conducted to investigate whether 
 The data is stored on OSF: https://osf.io/gw39z/
 
 ### R code
+This repo contains the code to analyse the data for
+
+Silje Andrea Hjortland Östman's master thesis (University of Bergen), 2018, Plant-pollinator interactions in the alpine: Landscape heterogeneity acts as a potential buffer against climate-change induced mismatch in the pollinator-generalist Ranunculus acris.
+
+Roos et al. 20XX, Finse paper.
+
 The R code to download the data, import, curate and analyse plant and pollinator interactions and reproductive output is in this GitHub repo in the R folder.
