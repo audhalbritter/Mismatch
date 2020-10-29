@@ -3,10 +3,87 @@ source("R/2_PeakPredicted.R")
 
 library("gridExtra")
 library("broom")
+library("patchwork")
 
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 ##### MISMATCH ####################################################################
+
+## FIGURE 3
+
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+
+Peak_Flower_Poll_Figure <- AllPred %>%
+  filter(stage != "L") %>% 
+  ggplot(aes(x = peak.fl, y = peak.poll)) +
+  labs(y = "Day of peak pollinator visitation", x = "Day of peak flowering", color = "Snowmelt stage") +
+  geom_smooth(method = lm, se = FALSE, size = 1, colour = "grey30") +
+  geom_point(aes(colour = factor(stage), shape = factor(stage)), size = 2) +
+  scale_color_manual(labels = c ("early","mid", "late"), values = cbbPalette[c(3,7,4)], name = "snowmelt stage") +
+  scale_shape_manual(labels = c ("early","mid", "late"), values = c(15,16,17), name = "snowmelt stage") +
+  geom_abline(slope = 1, color = "grey80", linetype = "dashed") +
+  ggtitle("a)") +
+  theme_light(base_size = 12) +
+  facet_wrap(~year) +
+  theme(legend.position = "bottom", 
+        legend.title=element_text(size=10), 
+        legend.text=element_text(size=10))
+
+
+
+##### CONSTRUCTED MISMATCH PLOTS ##############
+fl.x = rnorm(n = 100, mean = 4, sd = 1)
+fl.hx = dnorm(fl.x)
+poll.x = rnorm(n = 100, mean = 20)
+poll.hx = dnorm(poll.x)
+
+dd <- data_frame(fl.x, fl.hx, poll.x, poll.hx)
+
+# Mismatch type 1
+p1 <- ggplot(data.frame(x = c(-10, 18)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#D55E00", size = 1.2) +
+  stat_function(fun = dnorm, args = list(mean = 5, sd = 4), col="#56B4E9", size = 1.2) +
+  theme_light() +
+  ggtitle("b)") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+# Mismatch type 3
+p2 <- ggplot(data.frame(x = c(-10, 18)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#56B4E9", size = 1.2) +
+  stat_function(fun = dnorm, args = list(mean = 5, sd = 4), col="#D55E00", size = 1.2) +
+  theme_light() +
+  ggtitle("c)") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+# Mismatch type 2
+p3 <- ggplot(data.frame(x = c(-13, 15)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#56B4E9", size = 1.2) +
+  stat_function(fun = dnorm, args = list(mean = 0.5, sd = 4), col="#D55E00", size = 1.2) +
+  theme_light() +
+  ggtitle("d)") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+Peak_Flower_Poll_Figure + (p1 / p3 / p2) +  plot_layout(widths = c(2, 1))
+
 
 ## BY SITE
 AllPred %>% 
@@ -172,7 +249,7 @@ Biomass %>%
 
 ##### WEATHER THROUGHOUT SEASON ###################################################
 
-Weather <- weather %>% 
+Weather <- Weather %>% 
   mutate(precipitation = as.numeric(precipitation), temperature = as.numeric(temperature)) %>%
   mutate(doy = yday(date)) %>% 
   filter(doy>151)
@@ -486,56 +563,3 @@ mean.rate %>%
 
 
 
-##### CONSTRUCTED MISMATCH PLOTS ##############
-fl.x = rnorm(n = 100, mean = 4, sd = 1)
-fl.hx = dnorm(fl.x)
-poll.x = rnorm(n = 100, mean = 20)
-poll.hx = dnorm(poll.x)
-
-dd <- data_frame(fl.x, fl.hx, poll.x, poll.hx)
-
-ggplot(dd, aes(x = fl.x, y = fl.hx)) +
-  geom_line() +
-  geom_line(aes(x = poll.x, y = poll.hx))
-
-plot(fl.x, fl.hx)
-plot(poll.x, poll.hx)
-
-# Mismatch type 1
-ggplot(data.frame(x = c(-10, 18)), aes(x)) + 
-  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#D55E00", size = 1.2) +
-  stat_function(fun = dnorm, args = list(mean = 5, sd = 4), col="#56B4E9", size = 1.2) +
-  theme_light() +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-# Mismatch type 3
-ggplot(data.frame(x = c(-10, 18)), aes(x)) + 
-  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#56B4E9", size = 1.2) +
-  stat_function(fun = dnorm, args = list(mean = 5, sd = 4), col="#D55E00", size = 1.2) +
-  theme_light() +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-# Mismatch type 2
-ggplot(data.frame(x = c(-13, 15)), aes(x)) + 
-  stat_function(fun = dnorm, args = list(mean = 0, sd = 4), col="#56B4E9", size = 1.2) +
-  stat_function(fun = dnorm, args = list(mean = 0.5, sd = 4), col="#D55E00", size = 1.2) +
-  theme_light() +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
